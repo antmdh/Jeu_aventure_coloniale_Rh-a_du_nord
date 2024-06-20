@@ -1,0 +1,242 @@
+#####
+# Code pour faire AI jeu
+#####
+
+# 1 #installation et modules ----
+
+#install.packages("cowplot")
+library(cowplot)
+#install.packages("dplyr")
+library(dplyr)
+#install.packages("gganimate")
+library(gganimate)
+#install.packages("ggplot2")
+library(ggplot2)
+#install.packages('ggridges')
+library(ggridges)
+#install.packages("hablar")
+library(hablar)
+#install.packages("lubridate")
+library(lubridate)
+#install.packages("openxlsx")
+library(openxlsx)
+#install.packages("scales")
+library(scales)
+#install.packages('stringr')
+library(stringr)
+#install.packages("tidyr")
+library(tidyr)
+#install.packages("transformr")
+library(transformr)
+#install.packages("xlsx")  
+library(xlsx)
+
+# Le jeu -----
+#2.1 Etablissement des tableaux  ---
+
+# Surya Loka (Surya signifie "soleil" en sanskrit, Loka signifie "monde")
+# Bulan Raya (Bulan signifie "lune" en malais/indonésien, Raya signifie "grande" ou "majestueuse")
+# Angkasa Indah (Angkasa signifie "ciel" en malais/indonésien, Indah signifie "beau")
+# Samudra Biru (Samudra signifie "océan" en sanskrit, Biru signifie "bleu" en malais/indonésien)
+# Bintang Terang (Bintang signifie "étoile" en malais/indonésien, Terang signifie "brillant")
+# Sangkhala (Un mot thaï qui signifie "temps" ou "éternité")
+# Pulau Cahaya (Pulau signifie "île" en malais/indonésien, Cahaya signifie "lumière")
+# Gunung Langit (Gunung signifie "montagne" en malais/indonésien, Langit signifie "ciel")
+# Tanah Suci (Tanah signifie "terre" en malais/indonésien, Suci signifie "sacré")
+# Mega Sutra (Mega signifie "nuage" en sanskrit, Sutra signifie "fil" ou "écriture sacrée")
+
+
+Tableau_principal_10_province<-data.frame(
+  Prov1_SuryaLoka = c("Colonisateur"),
+  Prov2_BulanRaya = c("Colonisateur"),
+  Prov3_AngkasaIndah = c("Colonisateur"),
+  Prov4_BintangTerang = c("Colonisateur"),
+  Prov5_SamudraBiru = c("Colonisateur"),
+  Prov6_Sangkhala = c("Colonisateur"),
+  Prov7_PulauCahaya = c("Colonisateur"),
+  Prov8_GunungLangit = c("Colonisateur"),
+  Prov9_TanahSuci = c("Colonisateur"),
+  Prov10_MegaSutra = c("Colonisateur"), 
+  Numero_action = c(0),
+  Nomjoueur=c("Situation_initiale")
+  )
+
+
+#Etablissement du tableau des ressources militaires
+
+Tableau_Positions_troupes<-data.frame(
+  index=c(1,2,3,4,5,6,7,8,9,10),
+  Troupes_colonisateur = c("","","","","","","","","",""),
+  Troupes_colonisé = c("","","","","","","","","","")
+)
+
+Tableau_nombredetroupes<-data.frame(
+  Nbr_troupes_colonisateurs=c(0),
+  Nbr_troupes_Colonise=c(0)
+)
+
+
+liste_province<-colnames(Tableau_principal_10_province)[1:10]
+liste_province<-data.frame(nom=liste_province[1:10])
+
+Tableau_types_actions<-data.frame(
+    Prov1_SuryaLoka = c("vide"),
+    Prov2_BulanRaya = c("vide"),
+    Prov3_AngkasaIndah = c("vide"),
+    Prov4_BintangTerang = c("vide"),
+    Prov5_SamudraBiru = c("vide"),
+    Prov6_Sangkhala = c("vide"),
+    Prov7_PulauCahaya = c("vide"),
+    Prov8_GunungLangit = c("vide"),
+    Prov9_TanahSuci = c("vide"),
+    Prov10_MegaSutra = c("vide"))
+
+
+
+
+Resolution_bataille<-read.csv2("/Users/holly/Downloads/Resolution_bataille.csv", sep = ",")
+Resolution_bataille<-Resolution_bataille%>%select(-Somme)
+Resolution_bataille<-Resolution_bataille[-nrow(Resolution_bataille), ]
+
+Liste_action_colonisateur <-c("Grand fort hérisson",
+                              "Petit fort partout",
+                              "Colonnes destructrice, search and destroy",
+                              "Controle des campagnes et regroupement population",
+                              "Terreur et bombardement")
+
+Liste_action_colonise <-c("Guerrila de harcellement",
+                          "Transport de troupes",
+                          "Attaques urbaines",
+                          "Attaque surprise de masse",
+                          "Mobilisation population")
+
+
+#2.2 Lancement du jeu 
+# 9 province à joueur colonisateur et 1 province à joueur colonisé----
+Tableau_principal_10_province[1,sample(10,1)]<- "Colonisé"
+num_position_troupe_colonisateur<-0
+num_position_troupe_colonise<-0
+
+# Chaque camp reçoit 3 unités
+Tableau_nombredetroupes$Nbr_troupes_colonisateurs<-3
+Tableau_nombredetroupes$Nbr_troupes_Colonise<-3
+
+if (x %% 2 == 0) {
+  print("Le chiffre est pair")
+} else {
+  print("Le chiffre est impair")
+}
+#Fonction tour du joueur colonisateur
+
+if(Tableau_nombredetroupes$Nbr_troupes_colonisateur>0){
+# Si tu as des troupes tu choisis une province qui n'est pas avec des troupes
+  
+  liste_province<-colnames(Tableau_principal_10_province)
+  liste_province<-data.frame(nom=liste_province[1:10])
+  liste_province<-liste_province%>%mutate(dejatroupe = if_else(nom%in%Tableau_Positions_troupes$Troupes_colonisateur,FALSE,TRUE))
+  liste_province<-liste_province%>%filter(dejatroupe==TRUE)
+  num_province<-sample(nrow(liste_province),1)
+  Province<-liste_province[num_province,1] 
+    #BUG si listeprovince = nrow(0)
+
+
+# Ensuite tu choisis une action pour ta province
+num_action_colonistaeur<-sample(5,1)
+action_colonisateur <-Liste_action_colonisateur[num_action_colonistaeur] 
+
+# Tu places tes troupes
+num_position_troupe_colonisateur<-num_position_troupe_colonisateur+1
+Tableau_Positions_troupes$Troupes_colonisateur[num_position_troupe_colonisateur]<-Province
+
+# Ensuite tu regarde si les troupes ennemies sont dans la province en question
+
+
+if(Province%in%Tableau_Positions_troupes$Troupes_colonisé)
+  #Si troupes ennemies dans la province
+  
+{
+ #On trouve l'action de l'ennemi dans la province
+  action_ennemis<-Tableau_types_actions[,num_province]
+  Num_action_ennemis<- which(Liste_action_colonise == action_ennemis)
+   x<-Resolution_bataille%>%filter(X==action_colonisateur)
+   resultat_combat<-x[,Num_action_ennemis]
+
+   #rajoute une ligne
+   Tableau_principal_10_province<-
+     rbind(Tableau_principal_10_province,
+           Tableau_principal_10_province[nrow(Tableau_principal_10_province ),] )
+   #Rajoute une chifre aà numéro action
+   Tableau_principal_10_province$Numero_action[nrow(Tableau_principal_10_province)]<-     (Tableau_principal_10_province$Numero_action[nrow(Tableau_principal_10_province)-1])+1 
+   
+   #Rajoute le nom du joueur
+   Tableau_principal_10_province$Nomjoueur[nrow(Tableau_principal_10_province)]<-  "Colonisateur"
+   
+   #RAjoute la derniere action dans la zone
+   Tableau_types_actions[1,num_province]<- action_colonisateur
+   
+   if(resultat_combat ==1){
+     Tableau_principal_10_province[nrow(Tableau_principal_10_province),num_province]<-"Colonisateur"
+     print( paste("l'arméee colonisateur a gagné ",Province, "avec la méthode",action_colonisateur ))
+     }
+   if(resultat_combat ==0){
+     print(paste("Combats dans", Province, "avec la méthode",action_colonisateur))
+   }
+   if(resultat_combat ==-1{
+     #l'armée est réduire de 1
+     Tableau_nombredetroupes$Nbr_troupes_colonisateurs<-Tableau_nombredetroupes$Nbr_troupes_colonisateurs-1
+     #La troupes disparait
+     Tableau_Positions_troupes$Troupes_colonisateur[Tableau_Positions_troupes$Troupes_colonisateur ==Province] <-""
+     
+     print( paste("l'arméee colonisateur a perdu la ",Province, "avec la méthode",action_colonisateur, "l'armée est en deroute" ))
+     
+   }
+  #1 victoire colonisateur
+   #0 pas de victoire
+   #-1 victoire colonisé
+
+}
+else
+  #SI pas de troupes ennemies dans la province  
+  {print("joueurcolonise-a-termine")}
+
+
+}else{}
+
+# Si tu n'as pas de troupes en reserve
+
+
+if(province%in% Tableau_Positions_troupes$Troupes_colonisateur)
+  #Si il y a déja des troupes dans la province
+  {
+  
+}
+
+
+
+# calcul le nombre de provinces qu'il a et recoit troupes en plus
+# choisis une province où il n'y a pas de troupes
+# Décide de jouer ou pas en fonction de ses ressources ou pas
+# Décide de quel action mener
+# calcul du resultat
+
+
+
+#Fonction A = joueur A Recoit nouvelle 
+#Fonction A = joueur A choisis une province
+#Fonction B = Joueur B choisis 
+
+
+
+
+
+
+last_row <- df[nrow(df), ]
+
+#Fonction A = joueur A Recoit nouvelle 
+#Fonction A = joueur A choisis une province
+#Fonction B = Joueur B choisis 
+
+
+
+
+
