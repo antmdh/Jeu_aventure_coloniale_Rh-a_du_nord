@@ -121,94 +121,93 @@ num_position_troupe_colonise<-0
 Tableau_nombredetroupes$Nbr_troupes_colonisateurs<-3
 Tableau_nombredetroupes$Nbr_troupes_Colonise<-3
 
-if (x %% 2 == 0) {
-  print("Le chiffre est pair")
-} else {
-  print("Le chiffre est impair")
-}
-#Fonction tour du joueur colonisateur
 
-if(Tableau_nombredetroupes$Nbr_troupes_colonisateur>0){
-# Si tu as des troupes tu choisis une province qui n'est pas avec des troupes
-  
-  liste_province<-colnames(Tableau_principal_10_province)
-  liste_province<-data.frame(nom=liste_province[1:10])
-  liste_province<-liste_province%>%mutate(dejatroupe = if_else(nom%in%Tableau_Positions_troupes$Troupes_colonisateur,FALSE,TRUE))
-  liste_province<-liste_province%>%filter(dejatroupe==TRUE)
-  num_province<-sample(nrow(liste_province),1)
-  Province<-liste_province[num_province,1] 
+for (i in seq(1, 10)){print(i)}
+i<-2
+
+#Joueur colonisateur ET a des troupes 
+if (i %% 2 == 0 & Tableau_nombredetroupes$Nbr_troupes_colonisateur>0) {
+    # Si tu as des troupes tu choisis une province qui n'est pas avec des troupes
+    
+    liste_province<-colnames(Tableau_principal_10_province)
+    liste_province<-data.frame(nom=liste_province[1:10])
+    liste_province<-liste_province%>%mutate(dejatroupe = if_else(nom%in%Tableau_Positions_troupes$Troupes_colonisateur,FALSE,TRUE))
+    liste_province<-liste_province%>%filter(dejatroupe==TRUE)
+    num_province<-sample(nrow(liste_province),1)
+    Province<-liste_province[num_province,1] 
     #BUG si listeprovince = nrow(0)
-
-
-# Ensuite tu choisis une action pour ta province
-num_action_colonistaeur<-sample(5,1)
-action_colonisateur <-Liste_action_colonisateur[num_action_colonistaeur] 
-
-# Tu places tes troupes
-num_position_troupe_colonisateur<-num_position_troupe_colonisateur+1
-Tableau_Positions_troupes$Troupes_colonisateur[num_position_troupe_colonisateur]<-Province
-
+    
+    
+    # Ensuite tu choisis une action pour ta province
+    num_action_colonistaeur<-sample(5,1)
+    action_colonisateur <-Liste_action_colonisateur[num_action_colonistaeur] 
+    
+    # Tu places tes troupes
+    num_position_troupe_colonisateur<-num_position_troupe_colonisateur+1
+    Tableau_Positions_troupes$Troupes_colonisateur[num_position_troupe_colonisateur]<-Province
+}
 # Ensuite tu regarde si les troupes ennemies sont dans la province en question
 
-
-if(Province%in%Tableau_Positions_troupes$Troupes_colonisé)
-  #Si troupes ennemies dans la province
+if(i %% 2 == 0 & Tableau_nombredetroupes$Nbr_troupes_colonisateur>0 &Province%in%Tableau_Positions_troupes$Troupes_colonisé){
+      #Si troupes ennemies dans la province
+      
+    
+      #On trouve l'action de l'ennemi dans la province
+      action_ennemis<-Tableau_types_actions[,num_province]
+      Num_action_ennemis<- which(Liste_action_colonise == action_ennemis)
+      x<-Resolution_bataille%>%filter(X==action_colonisateur)
+      resultat_combat<-x[,Num_action_ennemis]
+      
+      #rajoute une ligne
+      Tableau_principal_10_province<-
+        rbind(Tableau_principal_10_province,
+              Tableau_principal_10_province[nrow(Tableau_principal_10_province ),] )
+      #Rajoute une chifre aà numéro action
+      Tableau_principal_10_province$Numero_action[nrow(Tableau_principal_10_province)]<-     (Tableau_principal_10_province$Numero_action[nrow(Tableau_principal_10_province)-1])+1 
+      
+      #Rajoute le nom du joueur
+      Tableau_principal_10_province$Nomjoueur[nrow(Tableau_principal_10_province)]<-  "Colonisateur"
+      
+      #RAjoute la derniere action dans la zone
+      Tableau_types_actions[1,num_province]<- action_colonisateur
+      
+      if(resultat_combat ==1){
+        Tableau_principal_10_province[nrow(Tableau_principal_10_province),num_province]<-"Colonisateur"
+        print( paste("l'arméee colonisateur a gagné ",Province, "avec la méthode",action_colonisateur ))
+      }
+      if(resultat_combat ==0){
+        print(paste("Combats dans", Province, "avec la méthode",action_colonisateur))
+      }
+      if(resultat_combat ==-1{
+        #l'armée est réduire de 1
+        Tableau_nombredetroupes$Nbr_troupes_colonisateurs<-Tableau_nombredetroupes$Nbr_troupes_colonisateurs-1
+        #La troupes disparait
+        Tableau_Positions_troupes$Troupes_colonisateur[Tableau_Positions_troupes$Troupes_colonisateur ==Province] <-""
+        
+        print( paste("l'arméee colonisateur a perdu la ",Province, "avec la méthode",action_colonisateur, "l'armée est en deroute" ))
+        
+      }
+      #1 victoire colonisateur
+      #0 pas de victoire
+      #-1 victoire colonisé
+      
+    }
+if(i %% 2 == 0 & Tableau_nombredetroupes$Nbr_troupes_colonisateur>0 &Province%!in%Tableau_Positions_troupes$Troupes_colonisé){
   
-{
- #On trouve l'action de l'ennemi dans la province
-  action_ennemis<-Tableau_types_actions[,num_province]
-  Num_action_ennemis<- which(Liste_action_colonise == action_ennemis)
-   x<-Resolution_bataille%>%filter(X==action_colonisateur)
-   resultat_combat<-x[,Num_action_ennemis]
+      #SI pas de troupes ennemies dans la province  
+    print("joueurcolonise-a-termine")}
+    
+    
 
-   #rajoute une ligne
-   Tableau_principal_10_province<-
-     rbind(Tableau_principal_10_province,
-           Tableau_principal_10_province[nrow(Tableau_principal_10_province ),] )
-   #Rajoute une chifre aà numéro action
-   Tableau_principal_10_province$Numero_action[nrow(Tableau_principal_10_province)]<-     (Tableau_principal_10_province$Numero_action[nrow(Tableau_principal_10_province)-1])+1 
-   
-   #Rajoute le nom du joueur
-   Tableau_principal_10_province$Nomjoueur[nrow(Tableau_principal_10_province)]<-  "Colonisateur"
-   
-   #RAjoute la derniere action dans la zone
-   Tableau_types_actions[1,num_province]<- action_colonisateur
-   
-   if(resultat_combat ==1){
-     Tableau_principal_10_province[nrow(Tableau_principal_10_province),num_province]<-"Colonisateur"
-     print( paste("l'arméee colonisateur a gagné ",Province, "avec la méthode",action_colonisateur ))
-     }
-   if(resultat_combat ==0){
-     print(paste("Combats dans", Province, "avec la méthode",action_colonisateur))
-   }
-   if(resultat_combat ==-1{
-     #l'armée est réduire de 1
-     Tableau_nombredetroupes$Nbr_troupes_colonisateurs<-Tableau_nombredetroupes$Nbr_troupes_colonisateurs-1
-     #La troupes disparait
-     Tableau_Positions_troupes$Troupes_colonisateur[Tableau_Positions_troupes$Troupes_colonisateur ==Province] <-""
-     
-     print( paste("l'arméee colonisateur a perdu la ",Province, "avec la méthode",action_colonisateur, "l'armée est en deroute" ))
-     
-   }
-  #1 victoire colonisateur
-   #0 pas de victoire
-   #-1 victoire colonisé
-
-}
-else
-  #SI pas de troupes ennemies dans la province  
-  {print("joueurcolonise-a-termine")}
-
-
-}else{}
-
-# Si tu n'as pas de troupes en reserve
-
-
-if(province%in% Tableau_Positions_troupes$Troupes_colonisateur)
-  #Si il y a déja des troupes dans la province
-  {
   
+#Joueur colonisateur ET PAS a des troupes   
+if (i %% 2 == 0 & Tableau_nombredetroupes$Nbr_troupes_colonisateur>0) {
+    print("vous n'avez plus de troupes")
+  }
+  
+  
+if (i %% 2 != 0){
+  print("Le chiffre est impair, colonisateur doit jouer")
 }
 
 
@@ -236,6 +235,8 @@ last_row <- df[nrow(df), ]
 #Fonction A = joueur A choisis une province
 #Fonction B = Joueur B choisis 
 
+
+#Fonction tour du joueur colonisateur
 
 
 
