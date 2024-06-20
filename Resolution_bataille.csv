@@ -1,0 +1,7 @@
+"Negatif = point colonisé, Positif point colonisateur",,Guerrila de harcellement,Transport de troupes,Attaques urbaines ,Attaque surprise de masse,Mobilisation population,Somme
+Colonisateur,Grand fort hérisson,0,1,0,-1,0,0
+Colonisateur,Petit fort partout,-1,1,0,0,0,0
+Colonisateur,"Colonnes destructrice, search and destroy",1,0,1,-1,-1,0
+Colonisateur,Controle des campagnes et regroupement population,1,1,-1,-1,0,0
+Colonisateur,Terreur et bombardement,0,0,0,1,-1,0
+,Somme,1,3,0,-2,-2,
