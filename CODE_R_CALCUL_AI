@@ -296,5 +296,160 @@ if (i %% 2 == 0) #joueur colonisateur)
   #stavaza actuellement le jeu ne peut pas se terminer car la seule condition c'est d'avoir des troupes partout, il faut donc en rajouter ou rajouter une condition pour dire que toute les troupes sont détruirtes    
     
     
+  
+  #stavaza actuellement le jeu ne peut pas se terminer car la seule condition c'est d'avoir des troupes partout, il faut donc en rajouter ou rajouter une condition pour dire que toute les troupes sont détruirtes    
+  
+  
+  ###
+
+#Joueur colonise ET a des troupes et a des troupes deployables
+if (i %% 2 != 0) #joueur colonisateur)
+    {
+      print("joueur colonise joue")
+  #tu choisis dans quel province tu va intervenir
+  #tu ne peux mettres des troupes que si elle existe déja
+  
+  liste_province<-colnames(Tableau_principal_10_province)
+  liste_province<-data.frame(nom=liste_province[1:10])
+  liste_province<-liste_province%>%mutate(dejatroupe = if_else(nom%in%Tableau_Positions_troupes$Troupes_colonisé ,FALSE,TRUE))
+  liste_province<-liste_province%>%filter(dejatroupe==TRUE)
+  if(nrow(liste_province)==0 ) #Si tout les provinces sont occupés, alors tu gagnes
+  {print ("Colonisateur a gagné")
+          } else
+            {
+              num_province<-sample(nrow(liste_province),1)
+              Province<-liste_province[num_province,1]
+              num_province<-which(Province == colnames(Tableau_principal_10_province))
+              }
+  
+  #tu choisis quel action tu va mener
+
+  num_action_colonise<-sample(5,1)
+  action_colonise<-Liste_action_colonise[num_action_colonise] 
+  
+
+  
+      if(Tableau_nombredetroupes$Nbr_troupes_Colonise>0) #Il reste des troupes en vie
+      {
+        print("il reste des troupes en vie")
+        if(Tableau_troupe_non_deploye$Nbr_troupes_Colonise>0)
+        {
+          print("il reste des soldats dans les casernes à déployer")
+          #on réduit le nombre de troupes à déployer de 1
+          Tableau_troupe_non_deploye$Nbr_troupes_Colonise[1]<-Tableau_troupe_non_deploye$Nbr_troupes_Colonise[1]-1
+          
+          
+          
+          
+          }else
+            {
+          print("il faut prendre des soldats déja déployé")
+              #on choisit la province qui voit partir des troupes
+              temp_DB<-Tableau_Positions_troupes%>%filter(Troupes_colonisé !="")%>%select(Troupes_colonisé)
+              temp_chiffre<-sample(nrow(temp_DB),1)
+              provincequidoitretirerlestroupes<-temp_DB[temp_chiffre,1]
+              
+              #on retire l'action de cette province
+              temp_chiffre<-which(colnames(Tableau_types_actions) == provincequidoitretirerlestroupes)
+              Tableau_types_actions[1,temp_chiffre]<-"vide" #les troupes sont retirés donc l'action sur cette province est vide
+              #on retire la troupe de sa position
+              temp_chiffre<- which(Tableau_Positions_troupes$Troupes_colonisé== provincequidoitretirerlestroupes)
+              Tableau_Positions_troupes$Troupes_colonisé[temp_chiffre] <-""
+              
+              
+              
+              }
+        
+      
+        #rajoute une ligne dans le tableau principal pour indiquer le vainqueur
+        Tableau_principal_10_province<-
+          rbind(Tableau_principal_10_province,
+                Tableau_principal_10_province[nrow(Tableau_principal_10_province ),] )
+        #Rajoute une chifre aà numéro action
+        Tableau_principal_10_province$Numero_action[nrow(Tableau_principal_10_province)]<-(Tableau_principal_10_province$Numero_action[nrow(Tableau_principal_10_province)-1])+1 
+        
+        #Rajoute le nom du joueur dans le log
+        Tableau_principal_10_province$Nomjoueur[nrow(Tableau_principal_10_province)]<-  "Colonisé"
+        
+        #Rajoute actions
+        Tableau_principal_10_province$Actions[nrow(Tableau_principal_10_province)]<-  paste("Colonisé","-",action_colonise,"-", Province)
+        # Tu places tes troupes
+        num_position_troupe_colonise<-num_position_troupe_colonise+1
+        
+        #tu identife une place libre dans le tableau des positions des troupes 
+        tempDB<-Tableau_Positions_troupes%>%filter(Troupes_colonisateur =="")
+        Tableau_Positions_troupes<-Tableau_Positions_troupes%>%arrange(desc(Troupes_colonisé))
+        temp_chiffre<-nrow(tempDB)
+        
+        Tableau_Positions_troupes$Troupes_colonisé[10-temp_chiffre+1]<-Province
+        
+        if(Tableau_types_actions[1,num_province]!="vide" )#Il y a des troupes ennemies sur cette province
+          {
+          
+          
+          
+          #On trouve l'action de l'ennemi dans la province
+          action_ennemis<-Tableau_types_actions[,num_province]
+          Num_action_ennemis<- which(Liste_action_colonisateur == action_ennemis)
+          x<-Resolution_bataille%>%filter(X==action_colonise)
+          resultat_combat<-x[,Num_action_ennemis+3] #on rajoute 3 pour sauter les 3 premieres colonnes du tableau 
+          
+          
+          if(resultat_combat ==1){
+            #La province revient au colonisateur
+            Tableau_principal_10_province[nrow(Tableau_principal_10_province),num_province]<-"Colonisé"
+            
+            #RAjoute la derniere action dans la zprovince
+            Tableau_types_actions[1,num_province]<- action_colonise
+            
+            print( paste("l'arméee colonisé a gagné ",Province, "avec la méthode",action_colonise))
+          }
+          if(resultat_combat ==0){
+            #RAjoute la derniere action dans la zprovince
+            Tableau_types_actions[1,num_province]<- action_colonise
+            
+            print(paste("Combats dans", Province, "avec la méthode",action_colonise))
+          }
+          if(resultat_combat ==-1){
+            #l'armée est réduite de 1
+            Tableau_nombredetroupes$Nbr_troupes_Colonise<-Tableau_nombredetroupes$Nbr_troupes_Colonise-1
+            #La troupes disparait
+            Tableau_Positions_troupes$Nbr_troupes_Colonise[Tableau_Positions_troupes$Nbr_troupes_Colonise ==Province] <-""
+            
+            print( paste("l'arméee colonisé a perdu la ",Province, "avec la méthode",action_colonise, "l'armée est en deroute" ))
+            
+          }
+          #1 victoire colonisateur
+          #0 pas de victoire
+          #-1 victoire colonisé
+          
+          
+          
+          
+          
+        }
+        else{print("il n' y a pas de troupes ennemies dans cette province")}
+          
+        #La province revient au colonisé
+        Tableau_principal_10_province[nrow(Tableau_principal_10_province),num_province]<-"Colonisé"
+        
+        #RAjoute la derniere action dans la zprovince
+        Tableau_types_actions[1,num_province]<- action_colonise
+        
+        print( paste("l'arméee colonisé a gagné ",Province, "avec la méthode",action_colonise, "sans combat" ))
+        
+        }else
+        {print("il n'y  a plus de troupes en vie, la partie est perdue pour colonisé ... pour l'instant")
+          }
+      
+      
+      }else
+        {
+      print("joueur colonise joue")
+        }
+  -------    
+
+  
+  #stavaza actuellement le jeu ne peut pas se terminer car la seule condition c'est d'avoir des troupes partout, il faut donc en rajouter ou rajouter une condition pour dire que toute les troupes sont détruirtes    
 
   
