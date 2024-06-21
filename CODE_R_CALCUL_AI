@@ -178,7 +178,7 @@ if(i %% 2 == 0 & Tableau_nombredetroupes$Nbr_troupes_colonisateur>0 &Province%in
       if(resultat_combat ==0){
         print(paste("Combats dans", Province, "avec la méthode",action_colonisateur))
       }
-      if(resultat_combat ==-1{
+      if(resultat_combat ==-1){
         #l'armée est réduire de 1
         Tableau_nombredetroupes$Nbr_troupes_colonisateurs<-Tableau_nombredetroupes$Nbr_troupes_colonisateurs-1
         #La troupes disparait
