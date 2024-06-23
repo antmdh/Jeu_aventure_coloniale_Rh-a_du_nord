@@ -323,6 +323,15 @@ for (i in seq(1, 200)) {
   }
 }
 
+Tableau_principal_10_province<-Tableau_principal_10_province%>%mutate(fichier = now())
+#Tableau_principal_10_province_tous<-Tableau_principal_10_province
+Tableau_principal_10_province_tous<-rbind(Tableau_principal_10_province_tous,Tableau_principal_10_province)
+Tableau_principal_10_province_tous<-Tableau_principal_10_province_tous%>%distinct(.keep_all = fichier)
+write.csv2(Tableau_principal_10_province_tous,file = "/Users/holly/Downloads/enregistrement_AI.csv")
+#stavaza actuellement le jeu ne peut pas se terminer car la seule condition c'est d'avoir des troupes partout, il faut donc en rajouter ou rajouter une condition pour dire que toute les troupes sont détruirtes    
+# bug quand deux armees sur la meme province  
+  
+
 #stavaza actuellement le jeu ne peut pas se terminer car la seule condition c'est d'avoir des troupes partout, il faut donc en rajouter ou rajouter une condition pour dire que toute les troupes sont détruirtes    
 # bug quand deux armees sur la meme province  
   
