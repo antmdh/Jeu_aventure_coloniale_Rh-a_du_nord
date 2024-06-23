@@ -323,6 +323,8 @@ for (i in seq(1, 200)) {
   }
 }
 
+#Sauvegarde des données
+
 Tableau_principal_10_province<-Tableau_principal_10_province%>%mutate(fichier = now())
 #Tableau_principal_10_province_tous<-Tableau_principal_10_province
 Tableau_principal_10_province_tous<-rbind(Tableau_principal_10_province_tous,Tableau_principal_10_province)
