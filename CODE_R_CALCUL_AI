@@ -107,21 +107,28 @@ Tableau_troupe_non_deploye<-data.frame(
 
 
 #Resolution_bataille<-read.csv2("/Users/holly/Downloads/Resolution_bataille.csv", sep = ",")
-Resolution_bataille<-read.csv2("C:/Users/u99amo/Downloads/Resolution_bataille.csv", sep = ",", fileEncoding = "UTF-8")
-Resolution_bataille<-Resolution_bataille%>%select(-Somme)
-Resolution_bataille<-Resolution_bataille[-nrow(Resolution_bataille), ]
+# Resolution_bataille<-read.csv2("C:/Users/u99amo/Downloads/Resolution_bataille.csv", sep = ",", fileEncoding = "UTF-8")
+# Resolution_bataille<-Resolution_bataille%>%select(-Somme)
+# Resolution_bataille<-Resolution_bataille[-nrow(Resolution_bataille), ]
 
-Liste_action_colonisateur <-c("Grand fort hérisson",
-                              "Petit fort partout",
-                              "Colonnes destructrice, search and destroy",
-                              "Controle des campagnes et regroupement population",
-                              "Terreur et bombardement")
 
-Liste_action_colonise <-c("Guerrila de harcellement",
-                          "Transport de troupes",
-                          "Attaques urbaines",
-                          "Attaque surprise de masse",
-                          "Mobilisation population")
+Resolution_bataille<- data.frame(
+  X=c("Guerrila.de.harcellement","Transport.de.troupes","Attaques_urbaines","Attaque_surprise.de.masse","Mobilisation.population"),
+  Grand.fort.herisson=c(0,1,0,-1,0),
+  Petit.fort.partout=c(-1,1,0,0,0),
+  Colonnes.destructrice.search.and.destroy=c(1,0,1,-1,-1),
+  Controle.des.campagnes.et.regroupement.population=c(1,1,-1,-1,0),
+  Terreur.et.bombardement=c(0,0,0,1,-1)
+)
+#action des colonisateurs en Y, des colonisé en X
+#Point négatif pour colonisé, positif pour colonisateur
+
+
+
+Liste_action_colonisateur <-colnames(Resolution_bataille)[2:6]
+
+
+Liste_action_colonise <-Resolution_bataille$X
 
 
 #2.2 Lancement du jeu 
@@ -130,7 +137,7 @@ num_provinceducolonise<-sample(10,1)
 Tableau_principal_10_province[1,num_provinceducolonise]<- "Colonisé"
 
 #Une armée déja déployé du colonisé
-Tableau_types_actions[1,num_provinceducolonise]<-"Guerrila de harcellement"
+Tableau_types_actions[1,num_provinceducolonise]<-Liste_action_colonise[1]    #"Guerrila de harcellement"
 Tableau_Positions_troupes$Troupes_colonisé[1]<-liste_province$nom[num_provinceducolonise] 
 num_position_troupe_colonisateur<-0 #nombre unité sur le terrain
 num_position_troupe_colonise<-0#nombre unité sur le terrain
@@ -197,12 +204,12 @@ for (i in seq(1, 200)) {
   if ((i %% 2 == 0) & (Tableau_nombredetroupes$Nbr_troupes_colonisateur > 0) & (Tableau_troupe_non_deploye$Nbr_troupes_colonisateurs <= 0)) {
     print("il faut prendre des soldats déjà déployés")
     temp_DB <- Tableau_Positions_troupes %>% filter(Troupes_colonisateur != "") %>% select(Troupes_colonisateur)
-    temp_chiffre <- sample(nrow(temp_DB), 1)
-    provincequidoitretirerlestroupes <- temp_DB[temp_chiffre, 1]
-    temp_chiffre <- which(colnames(Tableau_types_actions) == provincequidoitretirerlestroupes)
-    Tableau_types_actions[1, temp_chiffre] <- "vide"
-    temp_chiffre <- which(Tableau_Positions_troupes$Troupes_colonisateur == provincequidoitretirerlestroupes)
-    Tableau_Positions_troupes$Troupes_colonisateur[temp_chiffre] <- ""
+    temp_chiffre1 <- sample(nrow(temp_DB), 1)
+    provincequidoitretirerlestroupes <- temp_DB[temp_chiffre1, 1]
+    temp_chiffre2 <- which(colnames(Tableau_types_actions) == provincequidoitretirerlestroupes)
+    Tableau_types_actions[1, temp_chiffre2] <- "vide"
+    temp_chiffre3 <- which(Tableau_Positions_troupes$Troupes_colonisateur == provincequidoitretirerlestroupes)
+    Tableau_Positions_troupes$Troupes_colonisateur[temp_chiffre3] <- ""
   }
   
   if ((i %% 2 == 0) & (Tableau_nombredetroupes$Nbr_troupes_colonisateur > 0)) {
@@ -215,15 +222,15 @@ for (i in seq(1, 200)) {
     
     tempDB <- Tableau_Positions_troupes %>% filter(Troupes_colonisateur == "")
     Tableau_Positions_troupes <- Tableau_Positions_troupes %>% arrange(desc(Troupes_colonisateur))
-    temp_chiffre <- nrow(tempDB)
-    Tableau_Positions_troupes$Troupes_colonisateur[10 - temp_chiffre + 1] <- Province
+    temp_chiffre4 <- nrow(tempDB)
+    Tableau_Positions_troupes$Troupes_colonisateur[10 - temp_chiffre4 + 1] <- Province
   }
   
   if ((i %% 2 == 0) & (Tableau_types_actions[1, num_province] != "vide")) {
     action_ennemis <- Tableau_types_actions[, num_province]
     Num_action_ennemis <- which(Liste_action_colonise == action_ennemis)
-    x <- Resolution_bataille %>% filter(X == action_colonisateur)
-    resultat_combat <- x[, Num_action_ennemis + 2]
+    x <- Resolution_bataille[[action_colonisateur]] 
+    resultat_combat <- x[ Num_action_ennemis ]
     
     if (resultat_combat == 1) {
       Tableau_principal_10_province[nrow(Tableau_principal_10_province), num_province] <- "Colonisateur"
@@ -288,12 +295,12 @@ for (i in seq(1, 200)) {
   if ((i %% 2 != 0) & (Tableau_nombredetroupes$Nbr_troupes_Colonise > 0) & (Tableau_troupe_non_deploye$Nbr_troupes_Colonise <= 0)) {
     print("il faut prendre des soldats déjà déployés")
     temp_DB <- Tableau_Positions_troupes %>% filter(Troupes_colonisé != "") %>% select(Troupes_colonisé)
-    temp_chiffre <- sample(nrow(temp_DB), 1)
-    provincequidoitretirerlestroupes <- temp_DB[temp_chiffre, 1]
-    temp_chiffre <- which(colnames(Tableau_types_actions) == provincequidoitretirerlestroupes)
-    Tableau_types_actions[1, temp_chiffre] <- "vide"
-    temp_chiffre <- which(Tableau_Positions_troupes$Troupes_colonisé == provincequidoitretirerlestroupes)
-    Tableau_Positions_troupes$Troupes_colonisé[temp_chiffre] <- ""
+    temp_chiffre1 <- sample(nrow(temp_DB), 1)
+    provincequidoitretirerlestroupes <- temp_DB[temp_chiffre1, 1]
+    temp_chiffre2 <- which(colnames(Tableau_types_actions) == provincequidoitretirerlestroupes)
+    Tableau_types_actions[1, temp_chiffre2] <- "vide"
+    temp_chiffre3 <- which(Tableau_Positions_troupes$Troupes_colonisé == provincequidoitretirerlestroupes)
+    Tableau_Positions_troupes$Troupes_colonisé[temp_chiffre3] <- ""
   }
   
   if ((i %% 2 != 0) & (Tableau_nombredetroupes$Nbr_troupes_Colonise > 0)) {
@@ -307,15 +314,17 @@ for (i in seq(1, 200)) {
     
     tempDB <- Tableau_Positions_troupes %>% filter(Troupes_colonisé == "")
     Tableau_Positions_troupes <- Tableau_Positions_troupes %>% arrange(desc(Troupes_colonisé))
-    temp_chiffre <- nrow(tempDB)
-    Tableau_Positions_troupes$Troupes_colonisé[10 - temp_chiffre + 1] <- Province
+    temp_chiffre4 <- nrow(tempDB)
+    Tableau_Positions_troupes$Troupes_colonisé[10 - temp_chiffre4 + 1] <- Province
   }
   
   if ((i %% 2 != 0) & (Tableau_types_actions[1, num_province] != "vide")) {
     action_ennemis <- Tableau_types_actions[, num_province]
     Num_action_ennemis <- which(Liste_action_colonisateur == action_ennemis)
-    x <- Resolution_bataille %>% filter(X == action_ennemis)
-    resultat_combat <- x[, num_action_colonise + 2]
+    
+    
+    x <- Resolution_bataille[[action_ennemis]] 
+    resultat_combat <- x[num_action_colonise]
     
     if (resultat_combat == 1) {
       Tableau_principal_10_province[nrow(Tableau_principal_10_province), num_province] <- "Colonisé"
@@ -361,4 +370,4 @@ write.csv2(Tableau_principal_10_province_tous,file = "C:/Users/u99amo/Downloads/
 #stavaza actuellement le jeu ne peut pas se terminer car la seule condition c'est d'avoir des troupes partout, il faut donc en rajouter ou rajouter une condition pour dire que toute les troupes sont détruirtes    
 # bug quand deux armees sur la meme province  
 
-
+#je dois verifier pourquoi des provinces restent avec une politique militaire alors qu'il y a pluys d'armée
