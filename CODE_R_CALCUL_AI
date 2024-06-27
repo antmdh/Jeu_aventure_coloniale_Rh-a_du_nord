@@ -1,7 +1,7 @@
 #####
 # Code pour faire AI jeu
 #####
-#Date 24 06 2024
+#Date 26 06 2024
 # version reecrite ar chat GPT
 # 1 #installation et modules ----
 
@@ -70,6 +70,7 @@ Tableau_Positions_troupes<-data.frame(
   Troupes_colonisateur = c("","","","","","","","","",""),
   Troupes_colonisé = c("","","","","","","","","","")
 )
+#Etablissement du tableau du nombre de troupes
 
 Tableau_nombredetroupes<-data.frame(
   Nbr_troupes_colonisateurs=c(0),
@@ -80,17 +81,19 @@ Tableau_nombredetroupes<-data.frame(
 liste_province<-colnames(Tableau_principal_10_province)[1:10]
 liste_province<-data.frame(nom=liste_province[1:10])
 
-Tableau_types_actions<-data.frame(
-  Prov1_SuryaLoka = c("vide"),
-  Prov2_BulanRaya = c("vide"),
-  Prov3_AngkasaIndah = c("vide"),
-  Prov4_BintangTerang = c("vide"),
-  Prov5_SamudraBiru = c("vide"),
-  Prov6_Sangkhala = c("vide"),
-  Prov7_PulauCahaya = c("vide"),
-  Prov8_GunungLangit = c("vide"),
-  Prov9_TanahSuci = c("vide"),
-  Prov10_MegaSutra = c("vide"))
+#Etablissement du tableau type action qui indique l'activité qui se passe dans cette provinceà ce moment là
+
+# Tableau_types_actions<-data.frame(
+#   Prov1_SuryaLoka = c("vide"),
+#   Prov2_BulanRaya = c("vide"),
+#   Prov3_AngkasaIndah = c("vide"),
+#   Prov4_BintangTerang = c("vide"),
+#   Prov5_SamudraBiru = c("vide"),
+#   Prov6_Sangkhala = c("vide"),
+#   Prov7_PulauCahaya = c("vide"),
+#   Prov8_GunungLangit = c("vide"),
+#   Prov9_TanahSuci = c("vide"),
+#   Prov10_MegaSutra = c("vide")) #creation du tableau à l'ancienne
 
 #création du tableau qui reprend chaque action actuellement sur la province
 noms_colonnes<-colnames(Tableau_principal_10_province[1:10])
@@ -99,18 +102,18 @@ Tableau_types_actions <- setNames(data.frame(matrix(ncol = length(noms_colonnes)
 Tableau_types_actions[] <- "vide"
 rm(noms_colonnes)
 
-
+# tableau qui indique les troupes casernés 
 Tableau_troupe_non_deploye<-data.frame(
   Nbr_troupes_colonisateurs=c(0),
   Nbr_troupes_Colonise=c(0)
 )
 
+# importation de la matrice pour determiner le resultat pour chaue type de bataille
 
 #Resolution_bataille<-read.csv2("/Users/holly/Downloads/Resolution_bataille.csv", sep = ",")
 # Resolution_bataille<-read.csv2("C:/Users/u99amo/Downloads/Resolution_bataille.csv", sep = ",", fileEncoding = "UTF-8")
 # Resolution_bataille<-Resolution_bataille%>%select(-Somme)
 # Resolution_bataille<-Resolution_bataille[-nrow(Resolution_bataille), ]
-
 
 Resolution_bataille<- data.frame(
   X=c("Guerrila.de.harcellement","Transport.de.troupes","Attaques_urbaines","Attaque_surprise.de.masse","Mobilisation.population"),
@@ -120,7 +123,7 @@ Resolution_bataille<- data.frame(
   Controle.des.campagnes.et.regroupement.population=c(1,1,-1,-1,0),
   Terreur.et.bombardement=c(0,0,0,1,-1)
 )
-#action des colonisateurs en Y, des colonisé en X
+# x les actions du colonisé nom des colonnes actions du colonisateurs
 #Point négatif pour colonisé, positif pour colonisateur
 
 
@@ -132,7 +135,7 @@ Liste_action_colonise <-Resolution_bataille$X
 
 
 #2.2 Lancement du jeu 
-# 9 province à joueur colonisateur et 1 province à joueur colonisé----
+# 9 province pour joueur colonisateur et 1 province pour joueur colonisé----
 num_provinceducolonise<-sample(10,1)
 Tableau_principal_10_province[1,num_provinceducolonise]<- "Colonisé"
 
@@ -140,22 +143,24 @@ Tableau_principal_10_province[1,num_provinceducolonise]<- "Colonisé"
 Tableau_types_actions[1,num_provinceducolonise]<-Liste_action_colonise[1]    #"Guerrila de harcellement"
 Tableau_Positions_troupes$Troupes_colonisé[1]<-liste_province$nom[num_provinceducolonise] 
 num_position_troupe_colonisateur<-0 #nombre unité sur le terrain
-num_position_troupe_colonise<-0#nombre unité sur le terrain
+num_position_troupe_colonise<-1#nombre unité sur le terrain
 
 # Chaque camp reçoit 3 unités
 Tableau_nombredetroupes$Nbr_troupes_colonisateurs[1]<-3
 Tableau_nombredetroupes$Nbr_troupes_Colonise[1]<-3
 
-#aucune n'est déployé 
+#aucune n'est déployé sauf une des colonisé
 Tableau_troupe_non_deploye$Nbr_troupes_colonisateurs[1]<-Tableau_nombredetroupes$Nbr_troupes_colonisateurs[1]
 Tableau_troupe_non_deploye$Nbr_troupes_Colonise[1]<-Tableau_nombredetroupes$Nbr_troupes_Colonise[1]-1
 
+#preparation du fichier de sauvegarde
 Tableau_principal_10_province<-Tableau_principal_10_province%>%mutate(fichier = now())
 Tableau_principal_10_province_tous<-Tableau_principal_10_province
 
 #Boucle qui joue toute les batailles
+# c'est le colonisateur qui commence puisque le colonisé a deja un troupe sur le terrain
 i<-1
-for (i in seq(1, 200)) {
+for (i in seq(2, 200)) {
   
   #i<-2
   #3.1 tour du joueur colonialiste
@@ -177,11 +182,10 @@ for (i in seq(1, 200)) {
   
   # On choisit une province
   # Bug pour les colons, on devrait donner un avantage aux provinces proche de la cote, des grandes villes proche dnune province qu'on occupe deja.
-  
+  #bug il devrait choisir une province ou il y a des troupes ennemies pour essayer de les buter ou bien de grandes ressources qu'il veut garder
   if ((i %% 2 == 0) & (nrow(liste_province) != 0)) {
     num_province <- sample(nrow(liste_province), 1)
     Province <- liste_province[num_province, 1]
-    num_province <- which(Province == colnames(Tableau_principal_10_province))
   }
   
   #3.1.3 Le colonisateur choisit une action qu'on va mener, on devrait choisir une action en fonction de l'historique et du cout de chaque action
@@ -218,7 +222,7 @@ for (i in seq(1, 200)) {
     Tableau_principal_10_province$Nomjoueur[nrow(Tableau_principal_10_province)] <- "Colonisateur"
     Tableau_principal_10_province$Actions[nrow(Tableau_principal_10_province)] <- paste("Colonisateur", "-", action_colonisateur, "-", Province)
     num_position_troupe_colonisateur <- num_position_troupe_colonisateur + 1
-
+    
     
     tempDB <- Tableau_Positions_troupes %>% filter(Troupes_colonisateur == "")
     Tableau_Positions_troupes <- Tableau_Positions_troupes %>% arrange(desc(Troupes_colonisateur))
@@ -309,7 +313,7 @@ for (i in seq(1, 200)) {
     Tableau_principal_10_province$Nomjoueur[nrow(Tableau_principal_10_province)] <- "Colonisé"
     Tableau_principal_10_province$Actions[nrow(Tableau_principal_10_province)] <- paste("Colonisé", "-", action_colonise, "-", Province)
     num_position_troupe_colonise <- num_position_troupe_colonise + 1
-
+    
     
     
     tempDB <- Tableau_Positions_troupes %>% filter(Troupes_colonisé == "")
