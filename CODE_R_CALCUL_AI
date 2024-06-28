@@ -1,8 +1,8 @@
 #####
 # Code pour faire AI jeu
 #####
-#Date 26 06 2024
-# version reecrite ar chat GPT
+#Date 27 06 2024
+# bug principal : des actions de colonisateurs apparaissent dans le tableau types actions 
 # 1 #installation et modules ----
 
 #install.packages("cowplot")
@@ -30,6 +30,26 @@ library(tidyr)
 library(transformr)
 #install.packages("xlsx")  
 library(xlsx)
+
+
+#les regles du jeu
+#chaque joueur a des armées et les place sur différentes provinces
+#celui qui controle toute les provinces a gagné (suprématie) 
+#celui qui n'a plus de troupe a perdu (manque de ressource)
+
+#Si une armée occupe un territoire et que l'autre envois son armée, il y a une bataille résolu par une matrice de chance. L'équipe qui perd est détruite
+#certaines provinces avantage certaines stratégies de l'un ou de l'autre
+
+#Une province peut appartenir à un des deux camps meme si il n' plus d'armée dessus c'est le cas quand on déplace une troupe vers une autre
+
+#plus une armée est sur une province, plus elle est forte
+
+#plus le colonisé a de  province, plus il recoit de troupes
+#plus le colonisé a de provinces frontalieres, plus il recoit de truoupes
+
+#plus le temps passe, moins les colonisés recoivent de renfort
+#plus il a des provinces riches, plus il recoit de troupes
+
 
 # Le jeu -----
 #2.1 Etablissement des tableaux  ---
@@ -159,10 +179,14 @@ Tableau_principal_10_province_tous<-Tableau_principal_10_province
 
 #Boucle qui joue toute les batailles
 # c'est le colonisateur qui commence puisque le colonisé a deja un troupe sur le terrain
-i<-1
-for (i in seq(2, 200)) {
+#Tableau_nombredetroupes$Nbr_troupes_colonisateur <-0
+# 
+# i<-2
+derniernumero<-200
+for (i in seq(2, derniernumero)) {
   
-  #i<-2
+  #i<-5
+  
   #3.1 tour du joueur colonialiste
   if (i %% 2 == 0) {
     print("joueur colonialiste joue")
@@ -186,15 +210,23 @@ for (i in seq(2, 200)) {
   if ((i %% 2 == 0) & (nrow(liste_province) != 0)) {
     num_province <- sample(nrow(liste_province), 1)
     Province <- liste_province[num_province, 1]
+    
+    print(paste("Colonisateur choisit province",Province))
   }
   
-  #3.1.3 Le colonisateur choisit une action qu'on va mener, on devrait choisir une action en fonction de l'historique et du cout de chaque action
+  #3.1.3 Le colonisateur choisit une action qu'on va mener, pour l'instant aléatoire maison devrait choisir une action en fonction de l'historique et du cout de chaque action
   if (i %% 2 == 0) {
     num_action_colonistaeur <- sample(5, 1)
     action_colonisateur <- Liste_action_colonisateur[num_action_colonistaeur]
+    print(paste("Colonisateur choisit action",action_colonisateur))
   }
   
   #3.1.4 le colonisateur verifie si il a des troupes
+  
+  if ((i %% 2 == 0) & (Tableau_nombredetroupes$Nbr_troupes_colonisateur <= 0)){
+    print("Vous n'avez plus de troupe, la partie est perdue")
+    i<-derniernumero
+  }
   
   if ((i %% 2 == 0) & (Tableau_nombredetroupes$Nbr_troupes_colonisateur > 0)) {
     print("il reste des troupes en vie")
@@ -214,6 +246,10 @@ for (i in seq(2, 200)) {
     Tableau_types_actions[1, temp_chiffre2] <- "vide"
     temp_chiffre3 <- which(Tableau_Positions_troupes$Troupes_colonisateur == provincequidoitretirerlestroupes)
     Tableau_Positions_troupes$Troupes_colonisateur[temp_chiffre3] <- ""
+    print(paste("les troupes de",provincequidoitretirerlestroupes, "sont reprises vers un autre champ de bataille"))
+    
+    
+    
   }
   
   if ((i %% 2 == 0) & (Tableau_nombredetroupes$Nbr_troupes_colonisateur > 0)) {
@@ -222,24 +258,33 @@ for (i in seq(2, 200)) {
     Tableau_principal_10_province$Nomjoueur[nrow(Tableau_principal_10_province)] <- "Colonisateur"
     Tableau_principal_10_province$Actions[nrow(Tableau_principal_10_province)] <- paste("Colonisateur", "-", action_colonisateur, "-", Province)
     num_position_troupe_colonisateur <- num_position_troupe_colonisateur + 1
-    
+    print(paste("Colonisateur", "mene", action_colonisateur, " dans", Province))
     
     tempDB <- Tableau_Positions_troupes %>% filter(Troupes_colonisateur == "")
     Tableau_Positions_troupes <- Tableau_Positions_troupes %>% arrange(desc(Troupes_colonisateur))
     temp_chiffre4 <- nrow(tempDB)
     Tableau_Positions_troupes$Troupes_colonisateur[10 - temp_chiffre4 + 1] <- Province
+    print("la province attaqué est indiqué dans le tableau position troupe")
   }
   
   if ((i %% 2 == 0) & (Tableau_types_actions[1, num_province] != "vide")) {
+    print("on recherche l'action de l'ennemi")
     action_ennemis <- Tableau_types_actions[, num_province]
+    print(paste("ennemi applique la politique ",action_ennemis ))
     Num_action_ennemis <- which(Liste_action_colonise == action_ennemis)
     x <- Resolution_bataille[[action_colonisateur]] 
     resultat_combat <- x[ Num_action_ennemis ]
+    print(paste("le resultat du combat est ",resultat_combat ))
     
     if (resultat_combat == 1) {
+      #la province passe sous controle du colonisateur
       Tableau_principal_10_province[nrow(Tableau_principal_10_province), num_province] <- "Colonisateur"
       Tableau_types_actions[1, num_province] <- action_colonisateur
       print(paste("l'armée colonisateur a gagné", Province, "avec la méthode", action_colonisateur))
+      #l'armée du colonisé est détruite
+      Tableau_Positions_troupes$Troupes_colonisé[      Tableau_Positions_troupes$Troupes_colonisé==Province]<-""
+      Tableau_nombredetroupes$Nbr_troupes_Colonise<- Tableau_nombredetroupes$Nbr_troupes_Colonise - 1
+      
     }
     
     if (resultat_combat == 0) {
@@ -250,7 +295,7 @@ for (i in seq(2, 200)) {
     if (resultat_combat == -1) {
       Tableau_nombredetroupes$Nbr_troupes_colonisateurs <- Tableau_nombredetroupes$Nbr_troupes_colonisateurs - 1
       Tableau_Positions_troupes$Troupes_colonisateur[Tableau_Positions_troupes$Troupes_colonisateur == Province] <- ""
-      print(paste("l'armée colonisateur a perdu la", Province, "avec la méthode", action_colonisateur, "l'armée est en déroute"))
+      print(paste("l'armée colonisateur a perdu la bataille dans ", Province, "avec la méthode", action_colonisateur, "l'armée est en déroute"))
     }
   }
   
@@ -276,7 +321,10 @@ for (i in seq(2, 200)) {
     print("Colonisateur a gagné")
   }
   
-  if ((i %% 2 != 0) & (nrow(liste_province) != 0)) {
+  if (
+    (i %% 2 != 0) & (nrow(liste_province) != 0)
+    ) 
+    {
     num_province <- sample(nrow(liste_province), 1)
     Province <- liste_province[num_province, 1]
     num_province <- which(Province == colnames(Tableau_principal_10_province))
@@ -285,6 +333,12 @@ for (i in seq(2, 200)) {
   if ((i %% 2 != 0)) {
     num_action_colonise <- sample(5, 1)
     action_colonise <- Liste_action_colonise[num_action_colonise]
+  }
+  
+  
+  if ((i %% 2 != 0) & (Tableau_nombredetroupes$Nbr_troupes_Colonise <= 0)){
+    print("Vous n'avez plus de troupe, la partie est perdue")
+    i<-derniernumero
   }
   
   if ((i %% 2 != 0) & (Tableau_nombredetroupes$Nbr_troupes_Colonise > 0)) {
@@ -334,6 +388,10 @@ for (i in seq(2, 200)) {
       Tableau_principal_10_province[nrow(Tableau_principal_10_province), num_province] <- "Colonisé"
       Tableau_types_actions[1, num_province] <- action_colonise
       print(paste("l'armée colonisé a gagné", Province, "avec la méthode", action_colonise))
+      #l'armée du colonisateur est détruite
+      Tableau_Positions_troupes$Troupes_colonisateur[      Tableau_Positions_troupes$Troupes_colonisateur==Province]<-""
+      Tableau_nombredetroupes$Nbr_troupes_colonisateurs<- Tableau_nombredetroupes$Nbr_troupes_colonisateurs - 1
+      
     }
     
     if (resultat_combat == 0) {
@@ -354,6 +412,9 @@ for (i in seq(2, 200)) {
     Tableau_types_actions[1, num_province] <- action_colonise
     print(paste("l'armée colonisé a gagné", Province, "avec la méthode", action_colonise, "sans combat"))
   }
+  
+  write.csv2(Tableau_types_actions,file = paste0("C:/Users/u99amo/Downloads/enregistrement_tableau-types-actions",i,".csv"))
+  
 }
 
 #stavaza actuellement le jeu ne peut pas se terminer car la seule condition c'est d'avoir des troupes partout, il faut donc en rajouter ou rajouter une condition pour dire que toute les troupes sont détruirtes    
