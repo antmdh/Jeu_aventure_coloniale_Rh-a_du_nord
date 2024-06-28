@@ -3,7 +3,7 @@
 #####
 #Date 27 06 2024
 # bug principal : des actions de colonisateurs apparaissent dans le tableau types actions 
-# 1 #installation et modules ----
+#1. #installation et modules ----
 
 #install.packages("cowplot")
 
@@ -52,7 +52,7 @@ library(xlsx)
 
 
 # Le jeu -----
-#2.1 Etablissement des tableaux  ---
+#2. Etablissement des tableaux  ----
 
 # Surya Loka (Surya signifie "soleil" en sanskrit, Loka signifie "monde")
 # Bulan Raya (Bulan signifie "lune" en malais/indonésien, Raya signifie "grande" ou "majestueuse")
@@ -98,8 +98,8 @@ Tableau_nombredetroupes<-data.frame(
 )
 
 
-liste_province<-colnames(Tableau_principal_10_province)[1:10]
-liste_province<-data.frame(nom=liste_province[1:10])
+liste_province_TOTAL<-colnames(Tableau_principal_10_province)[1:10]
+liste_province_TOTAL<-data.frame(nom=liste_province_TOTAL[1:10])
 
 #Etablissement du tableau type action qui indique l'activité qui se passe dans cette provinceà ce moment là
 
@@ -154,14 +154,14 @@ Liste_action_colonisateur <-colnames(Resolution_bataille)[2:6]
 Liste_action_colonise <-Resolution_bataille$X
 
 
-#2.2 Lancement du jeu 
-# 9 province pour joueur colonisateur et 1 province pour joueur colonisé----
-num_provinceducolonise<-sample(10,1)
-Tableau_principal_10_province[1,num_provinceducolonise]<- "Colonisé"
+#3. Lancement du jeu -----
+# 9 province pour joueur colonisateur et 1 province pour joueur colonisé
+num_provinceducoloniseaudebut<-sample(10,1)
+Tableau_principal_10_province[1,num_provinceducoloniseaudebut]<- "Colonisé"
 
 #Une armée déja déployé du colonisé
-Tableau_types_actions[1,num_provinceducolonise]<-Liste_action_colonise[1]    #"Guerrila de harcellement"
-Tableau_Positions_troupes$Troupes_colonisé[1]<-liste_province$nom[num_provinceducolonise] 
+Tableau_types_actions[1,num_provinceducoloniseaudebut]<-Liste_action_colonise[1]    #"Guerrila de harcellement"
+Tableau_Positions_troupes$Troupes_colonisé[1]<-liste_province_TOTAL$nom[num_provinceducoloniseaudebut] 
 num_position_troupe_colonisateur<-0 #nombre unité sur le terrain
 num_position_troupe_colonise<-1#nombre unité sur le terrain
 
@@ -177,79 +177,76 @@ Tableau_troupe_non_deploye$Nbr_troupes_Colonise[1]<-Tableau_nombredetroupes$Nbr_
 Tableau_principal_10_province<-Tableau_principal_10_province%>%mutate(fichier = now())
 Tableau_principal_10_province_tous<-Tableau_principal_10_province
 
+#4. La réalisation des X parties  -----
 #Boucle qui joue toute les batailles
 # c'est le colonisateur qui commence puisque le colonisé a deja un troupe sur le terrain
-#Tableau_nombredetroupes$Nbr_troupes_colonisateur <-0
-# 
-# i<-2
+
 derniernumero<-200
 for (i in seq(2, derniernumero)) {
   
-  #i<-5
-  
-  #3.1 tour du joueur colonialiste
+  #i<-2
+  #4.1 tour du joueur colonialiste----
+  #4.1.1 On regarde les provinces où il ''y a pas encore de soldat à nous 
   if (i %% 2 == 0) {
+    liste_province_colonisateur <- colnames(Tableau_principal_10_province)
+    liste_province_colonisateur <- data.frame(nom = liste_province_colonisateur[1:10])
+    liste_province_colonisateur <- liste_province_colonisateur %>% mutate(dejatroupe = if_else(nom %in% Tableau_Positions_troupes$Troupes_colonisateur, FALSE, TRUE))
+    liste_province_colonisateur <- liste_province_colonisateur %>% filter(dejatroupe == TRUE)
     print("joueur colonialiste joue")
-    
-    #3.1.1 On regarde les provinces où il ''y a pas encore de soldat à nous 
-    liste_province <- colnames(Tableau_principal_10_province)
-    liste_province <- data.frame(nom = liste_province[1:10])
-    liste_province <- liste_province %>% mutate(dejatroupe = if_else(nom %in% Tableau_Positions_troupes$Troupes_colonisateur, FALSE, TRUE))
-    liste_province <- liste_province %>% filter(dejatroupe == TRUE)
-  }
+    }
   
-  #3.1.2 Si il n'y a pas de provinces sans troupes à nous, alors la partie est gagné pour le colonisateur
-  
-  if ((i %% 2 == 0) & (nrow(liste_province) == 0)) {
+
+  #4.1.2 Si il n'y a pas de provinces sans troupes à nous, alors la partie est gagné pour le colonisateur
+  if ((i %% 2 == 0) & (nrow(liste_province_colonisateur) == 0)) {
+    i<-derniernumero+1
     print("Colonisateur a gagné")
-  }
+      }
   
-  # On choisit une province
-  # Bug pour les colons, on devrait donner un avantage aux provinces proche de la cote, des grandes villes proche dnune province qu'on occupe deja.
-  #bug il devrait choisir une province ou il y a des troupes ennemies pour essayer de les buter ou bien de grandes ressources qu'il veut garder
-  if ((i %% 2 == 0) & (nrow(liste_province) != 0)) {
-    num_province <- sample(nrow(liste_province), 1)
-    Province <- liste_province[num_province, 1]
-    
+  
+  #4.1.3 Le colonisateur choisit une province où attaquer et l'action qui va etre mené
+  if ((i %% 2 == 0) & (nrow(liste_province_colonisateur) != 0)) {
+    num_province <- sample(nrow(liste_province_colonisateur), 1)
+    Province <- liste_province_colonisateur[num_province, 1]
     print(paste("Colonisateur choisit province",Province))
-  }
-  
-  #3.1.3 Le colonisateur choisit une action qu'on va mener, pour l'instant aléatoire maison devrait choisir une action en fonction de l'historique et du cout de chaque action
-  if (i %% 2 == 0) {
     num_action_colonistaeur <- sample(5, 1)
     action_colonisateur <- Liste_action_colonisateur[num_action_colonistaeur]
     print(paste("Colonisateur choisit action",action_colonisateur))
-  }
+    
+    }
   
-  #3.1.4 le colonisateur verifie si il a des troupes
+
   
+  #4.1.4 le colonisateur verifie si il a des troupes sinon il a perdu
   if ((i %% 2 == 0) & (Tableau_nombredetroupes$Nbr_troupes_colonisateur <= 0)){
-    print("Vous n'avez plus de troupe, la partie est perdue")
-    i<-derniernumero
+    print("Vous n'avez plus de troupe, la partie est perdue pour le colonisateur")
+    i<-derniernumero+1
+  }
+  if ((i %% 2 == 0) & (Tableau_nombredetroupes$Nbr_troupes_colonisateur > 0)){
+    print("il reste des troupes en vie pour le colonisateur")
   }
   
-  if ((i %% 2 == 0) & (Tableau_nombredetroupes$Nbr_troupes_colonisateur > 0)) {
-    print("il reste des troupes en vie")
-  }
   
+  #4.1.5 Le colonisateur verifie si il a des troupes en caserne et les prends
   if ((i %% 2 == 0) & (Tableau_nombredetroupes$Nbr_troupes_colonisateur > 0) & (Tableau_troupe_non_deploye$Nbr_troupes_colonisateurs > 0)) {
-    print("il reste des soldats dans les casernes à déployer")
     Tableau_troupe_non_deploye$Nbr_troupes_colonisateurs[1] <- Tableau_troupe_non_deploye$Nbr_troupes_colonisateurs[1] - 1
+    print("il reste des soldats dans les casernes à déployer")
   }
   
+  #4.1.6 Le colonisateur prend des troupes sur le terrain
   if ((i %% 2 == 0) & (Tableau_nombredetroupes$Nbr_troupes_colonisateur > 0) & (Tableau_troupe_non_deploye$Nbr_troupes_colonisateurs <= 0)) {
+    
+    #choisis des troupes déja déployé
+    temp_DB_colonisateur <- Tableau_Positions_troupes %>% filter(Troupes_colonisateur != "") %>% select(Troupes_colonisateur)
+    temp_chiffre_colonisateur1 <- sample(nrow(temp_DB_colonisateur), 1)
+    provincequidoitretirerlestroupes_colonisateur <- temp_DB_colonisateur[temp_chiffre_colonisateur1, 1]
+    #actions effacé de la province
+    temp_chiffre_colonisateur2 <- which(colnames(Tableau_types_actions) == provincequidoitretirerlestroupes_colonisateur)
+    Tableau_types_actions[1, temp_chiffre_colonisateur2] <- "vide"
+    #troupes effacé de la province
+    temp_chiffre_colonisateur3 <- which(Tableau_Positions_troupes$Troupes_colonisateur == provincequidoitretirerlestroupes_colonisateur)
+    Tableau_Positions_troupes$Troupes_colonisateur[temp_chiffre_colonisateur3] <- ""
     print("il faut prendre des soldats déjà déployés")
-    temp_DB <- Tableau_Positions_troupes %>% filter(Troupes_colonisateur != "") %>% select(Troupes_colonisateur)
-    temp_chiffre1 <- sample(nrow(temp_DB), 1)
-    provincequidoitretirerlestroupes <- temp_DB[temp_chiffre1, 1]
-    temp_chiffre2 <- which(colnames(Tableau_types_actions) == provincequidoitretirerlestroupes)
-    Tableau_types_actions[1, temp_chiffre2] <- "vide"
-    temp_chiffre3 <- which(Tableau_Positions_troupes$Troupes_colonisateur == provincequidoitretirerlestroupes)
-    Tableau_Positions_troupes$Troupes_colonisateur[temp_chiffre3] <- ""
-    print(paste("les troupes de",provincequidoitretirerlestroupes, "sont reprises vers un autre champ de bataille"))
-    
-    
-    
+    print(paste("les troupes de",provincequidoitretirerlestroupes_colonisateur, "sont reprises vers un autre champ de bataille"))
   }
   
   if ((i %% 2 == 0) & (Tableau_nombredetroupes$Nbr_troupes_colonisateur > 0)) {
@@ -306,59 +303,66 @@ for (i in seq(2, derniernumero)) {
     print(paste("l'armée colonisateur a gagné", Province, "avec la méthode", action_colonisateur, "sans combat"))
   }
   
-  #i<-1
+
   
-  if ((i %% 2 != 0)) {
+  
+  #4.2 tour du joueur colonisé  ----
+  #4.2.1 On regarde les provinces où il ''y a pas encore de soldat à nous 
+    if ((i %% 2 != 0)) {
+    liste_province_colonise <- colnames(Tableau_principal_10_province)
+    liste_province_colonise <- data.frame(nom = liste_province_colonise[1:10])
+    liste_province_colonise <- liste_province_colonise %>% mutate(dejatroupe = if_else(nom %in% Tableau_Positions_troupes$Troupes_colonisé, FALSE, TRUE))
+    liste_province_colonise <- liste_province_colonise %>% filter(dejatroupe == TRUE)
     print("joueur colonisé joue")
-    
-    liste_province <- colnames(Tableau_principal_10_province)
-    liste_province <- data.frame(nom = liste_province[1:10])
-    liste_province <- liste_province %>% mutate(dejatroupe = if_else(nom %in% Tableau_Positions_troupes$Troupes_colonisé, FALSE, TRUE))
-    liste_province <- liste_province %>% filter(dejatroupe == TRUE)
   }
-  
-  if ((i %% 2 != 0) & (nrow(liste_province) == 0)) {
+  #4.2.2 Si il n'y a pas de provinces sans troupes à nous, alors la partie est gagné pour le colonisateur
+  if ((i %% 2 != 0) & (nrow(liste_province_colonise) == 0)) {
     print("Colonisateur a gagné")
+    i<-derniernumero+1
   }
   
+  #4.2.3 Le colonisateur choisit une province où attaquer et l'action qui va etre mené
   if (
-    (i %% 2 != 0) & (nrow(liste_province) != 0)
-    ) 
-    {
-    num_province <- sample(nrow(liste_province), 1)
-    Province <- liste_province[num_province, 1]
-    num_province <- which(Province == colnames(Tableau_principal_10_province))
-  }
-  
-  if ((i %% 2 != 0)) {
+    (i %% 2 != 0) & (nrow(liste_province_colonise) != 0))  {
+    num_province <- sample(nrow(liste_province_colonise), 1)
+    Province <- liste_province_colonise[num_province, 1]
+    print(paste("Colonisé choisit province",Province))
     num_action_colonise <- sample(5, 1)
     action_colonise <- Liste_action_colonise[num_action_colonise]
-  }
+    print(paste("Colonisé choisit action",action_colonise))
+      }
   
-  
+  #4.2.4 le colonisateur verifie si il a des troupes sinon il a perdu
   if ((i %% 2 != 0) & (Tableau_nombredetroupes$Nbr_troupes_Colonise <= 0)){
-    print("Vous n'avez plus de troupe, la partie est perdue")
-    i<-derniernumero
+    print("Vous n'avez plus de troupe, la partie est perdue pour le colonisé")
+    i<-derniernumero+1
+  }  
+  
+  if ((i %% 2 != 0) & (Tableau_nombredetroupes$Nbr_troupes_Colonise > 0)){
+    print("il reste des troupes en vie pour le colonisé")
   }
   
-  if ((i %% 2 != 0) & (Tableau_nombredetroupes$Nbr_troupes_Colonise > 0)) {
-    print("il reste des troupes en vie")
-  }
   
+  #4.2.5 Le colonisé verifie si il a des troupes en caserne
   if ((i %% 2 != 0) & (Tableau_nombredetroupes$Nbr_troupes_Colonise > 0) & (Tableau_troupe_non_deploye$Nbr_troupes_Colonise > 0)) {
-    print("il reste des soldats dans les casernes à déployer")
     Tableau_troupe_non_deploye$Nbr_troupes_Colonise[1] <- Tableau_troupe_non_deploye$Nbr_troupes_Colonise[1] - 1
-  }
+    print("il reste des soldats dans les casernes à déployer")
+      }
   
+
+  
+  #4.2.6 Le colonisé prend des troupes sur le terrain
   if ((i %% 2 != 0) & (Tableau_nombredetroupes$Nbr_troupes_Colonise > 0) & (Tableau_troupe_non_deploye$Nbr_troupes_Colonise <= 0)) {
+    
+    temp_DB_colonise <- Tableau_Positions_troupes %>% filter(Troupes_colonisé != "") %>% select(Troupes_colonisé)
+    temp_chiffre_colonise1 <- sample(nrow(temp_DB_colonise), 1)
+    provincequidoitretirerlestroupes_colonise <- temp_DB_colonise[temp_chiffre_colonise1, 1]
+    temp_chiffre_colonise2 <- which(colnames(Tableau_types_actions) == provincequidoitretirerlestroupes_colonise)
+    Tableau_types_actions[1, temp_chiffre_colonise2] <- "vide"
+    temp_chiffre_colonise3 <- which(Tableau_Positions_troupes$Troupes_colonisé == provincequidoitretirerlestroupes_colonise)
+    Tableau_Positions_troupes$Troupes_colonisé[temp_chiffre_colonise3] <- ""
     print("il faut prendre des soldats déjà déployés")
-    temp_DB <- Tableau_Positions_troupes %>% filter(Troupes_colonisé != "") %>% select(Troupes_colonisé)
-    temp_chiffre1 <- sample(nrow(temp_DB), 1)
-    provincequidoitretirerlestroupes <- temp_DB[temp_chiffre1, 1]
-    temp_chiffre2 <- which(colnames(Tableau_types_actions) == provincequidoitretirerlestroupes)
-    Tableau_types_actions[1, temp_chiffre2] <- "vide"
-    temp_chiffre3 <- which(Tableau_Positions_troupes$Troupes_colonisé == provincequidoitretirerlestroupes)
-    Tableau_Positions_troupes$Troupes_colonisé[temp_chiffre3] <- ""
+    print(paste("les troupes de",provincequidoitretirerlestroupes_colonise, "sont reprises vers un autre champ de bataille"))
   }
   
   if ((i %% 2 != 0) & (Tableau_nombredetroupes$Nbr_troupes_Colonise > 0)) {
@@ -421,13 +425,15 @@ for (i in seq(2, derniernumero)) {
 # bug quand deux armees sur la meme province
 #Sauvegarde des données
 
-
+#5. Sauvegarde du jeu ----
 
 Tableau_principal_10_province_tous<-rbind(Tableau_principal_10_province_tous,Tableau_principal_10_province)
 Tableau_principal_10_province_tous<-Tableau_principal_10_province_tous%>%distinct(.keep_all = fichier)
 #write.csv2(Tableau_principal_10_province_tous,file = "/Users/holly/Downloads/enregistrement_AI.csv")
 write.csv2(Tableau_principal_10_province_tous,file = "C:/Users/u99amo/Downloads/enregistrement_AI.csv")
 
+
+#5. Commentaires ----
 #stavaza actuellement le jeu ne peut pas se terminer car la seule condition c'est d'avoir des troupes partout, il faut donc en rajouter ou rajouter une condition pour dire que toute les troupes sont détruirtes    
 # bug quand deux armees sur la meme province  
 
@@ -436,3 +442,9 @@ write.csv2(Tableau_principal_10_province_tous,file = "C:/Users/u99amo/Downloads/
 # bug quand deux armees sur la meme province  
 
 #je dois verifier pourquoi des provinces restent avec une politique militaire alors qu'il y a pluys d'armée
+
+# On choisit une province
+# Bug pour les colons, on devrait donner un avantage aux provinces proche de la cote, des grandes villes proche dnune province qu'on occupe deja.
+#bug il devrait choisir une province ou il y a des troupes ennemies pour essayer de les buter ou bien de grandes ressources qu'il veut garder
+
+#L'action aléatoir  pour l'instant aléatoire maison devrait choisir une action en fonction de l'historique et du cout de chaque action
