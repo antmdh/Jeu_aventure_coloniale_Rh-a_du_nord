@@ -6,7 +6,9 @@
 #1. #installation et modules ----
 
 #install.packages("cowplot")
+#install.packages("reshape2")
 
+library(reshape2)
 library(dplyr)
 #install.packages("gganimate")
 library(gganimate)
@@ -455,8 +457,66 @@ for (i in seq(2, derniernumero)) {
 
 Tableau_principal_10_province_tous<-rbind(Tableau_principal_10_province_tous,Tableau_principal_10_province)
 Tableau_principal_10_province_tous<-Tableau_principal_10_province_tous%>%distinct(.keep_all = fichier)
+
+
+
 write.csv2(Tableau_principal_10_province_tous,file = "/Users/holly/Downloads/enregistrement_AI.csv")
 #write.csv2(Tableau_principal_10_province_tous,file = "C:/Users/u99amo/Downloads/enregistrement_AI.csv")
+
+#5. Carte de chaleur de la partie
+
+# Convertir les valeurs "A" en 0 et "B" en 1
+df<-Tableau_principal_10_province[,1:10]
+df_numeric <- apply(df, 2, function(x) ifelse(x == "Colonisateur", 0, 1))
+# Transformer le data frame en un format long
+df_long <- melt(df_numeric)
+# Créer la heatmap
+ggplot(df_long, aes(x = Var2, y = Var1, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "red") +
+  labs(x = "Colonnes", y = "Lignes", fill = "Valeur") +
+  theme_minimal()
+
+
+# Charger les bibliothèques nécessaires
+library(ggplot2)
+library(reshape2)
+
+# Exemple de données (remplacez cela par votre dataframe réel)
+df <- data.frame(
+  Prov1_SuryaLoka = Tableau_principal_10_province[,1] ,
+  Prov2_BulanRaya = Tableau_principal_10_province[,2],
+  Prov3_AngkasaIndah = Tableau_principal_10_province[,3],
+  Prov4_BintangTerang = Tableau_principal_10_province[,4],
+  Prov5_SamudraBiru = Tableau_principal_10_province[,5],
+  Prov6_Sangkhala = Tableau_principal_10_province[,6],
+  Prov7_PulauCahaya = Tableau_principal_10_province[,7],
+  Prov8_GunungLangit = Tableau_principal_10_province[,8],
+  Prov9_TanahSuci = Tableau_principal_10_province[,9],
+  Prov10_MegaSutra =Tableau_principal_10_province[,10]
+)
+str(df)
+# df<-Tableau_principal_10_province[,1:10]
+str(df)
+
+# Convertir les valeurs "Colonisateur" en 0 et "Colonisé" en 1
+df_numeric <- apply(df, 2, function(x) ifelse(x == "Colonisateur", 0, 1))
+
+# Transformer le data frame en un format long
+df_long <- melt(df_numeric)
+
+# Calculer les positions des lignes verticales
+x_breaks <- seq(1.5, ncol(df) + 0.5, 1)
+
+# Créer la heatmap
+ggplot(df_long, aes(x = Var2, y = Var1, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "#271D8D", high = "#CA1510") +
+  labs(x = "Colonnes", y = "Lignes", fill = "Valeur") +
+  scale_y_reverse() +
+  theme_minimal()+
+  geom_vline(xintercept = x_breaks, color = "black", size = 0.5)
+
 
 
 #5. Commentaires ----
