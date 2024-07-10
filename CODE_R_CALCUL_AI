@@ -1,9 +1,28 @@
 #####
 # Code pour faire AI jeu
 #####
-#Date 27 06 2024
+#Date 10 07 2024
 # bug principal : des actions de colonisateurs apparaissent dans le tableau types actions 
+
+#0 Tableau de bord
+ordinateur<- 1
+# pc <- 1
+# mac <-2
+
+#0 Récupération sauvegarde
+Sauvegarde<-0
+#sauvegarde existe déja en local <- 1
+#sauvegarde n'existe pas en local <-2
+
+Exportdetail<-FALSE
+#si on veut le détail de chaque opération <- TRUE
+#sinon FALSE
+
 #1. #installation et modules ----
+
+
+
+
 
 #install.packages("cowplot")
 #install.packages("reshape2")
@@ -176,8 +195,20 @@ Tableau_troupe_non_deploye$Nbr_troupes_colonisateurs[1]<-Tableau_nombredetroupes
 Tableau_troupe_non_deploye$Nbr_troupes_Colonise[1]<-Tableau_nombredetroupes$Nbr_troupes_Colonise[1]-1
 
 #preparation du fichier de sauvegarde
-Tableau_principal_10_province<-Tableau_principal_10_province%>%mutate(fichier = now())
-Tableau_principal_10_province_tous<-Tableau_principal_10_province
+Tableau_principal_10_province<-Tableau_principal_10_province%>%mutate(fichier = sample.int(1000000,1))
+
+
+if(Sauvegarde==0 ){
+  Tableau_principal_10_province_tous<-Tableau_principal_10_province
+  Sauvegarde<-1
+  
+}
+if(Sauvegarde==1 & ordinateur==1 ){
+  Tableau_principal_10_province_tous<-read.csv2("C:/Users/u99amo/Downloads/enregistrement_AI.csv")
+}
+if(Sauvegarde==1 & ordinateur==2 ){
+  Tableau_principal_10_province_tous<-read.csv2("/Users/holly/Downloads/enregistrement_AI.csv")
+}
 
 #4. La réalisation des X parties  -----
 #Boucle qui joue toute les batailles
@@ -215,8 +246,8 @@ for (i in seq(2, derniernumero)) {
       num_action_colonistaeur <- sample(5, 1)
       action_colonisateur <- Liste_action_colonisateur[num_action_colonistaeur]
       print(paste("Colonisateur choisit action",action_colonisateur))
-    
-  }}
+      
+    }}
   
   
   
@@ -331,21 +362,21 @@ for (i in seq(2, derniernumero)) {
   #4.2.2 Si il n'y a pas de provinces sans troupes à nous, alors la partie est gagné pour le colonisateur
   if (i %% 2 != 0)  {
     if((nrow(liste_province_colonise) == 0)){
-    print("Colonisateur a gagné")
-    i<-derniernumero+1
-  }}
+      print("Colonisateur a gagné")
+      i<-derniernumero+1
+    }}
   
   #4.2.3 Le colonisateur choisit une province où attaquer et l'action qui va etre mené
   if (i %% 2 != 0)  {
-      if (nrow(liste_province_colonise) != 0){
-        choixprovincesanstroupecolonise <- sample(nrow(liste_province_colonisateur), 1)
-        Province <- liste_province_colonise[choixprovincesanstroupecolonise, 1]
-        num_province <- which(Province == colnames(Tableau_principal_10_province))
-        print(paste("Colonisé choisit province",Province))
-        num_action_colonise <- sample(5, 1)
-        action_colonise <- Liste_action_colonise[num_action_colonise]
-        print(paste("Colonisé choisit action",action_colonise))
-      }}
+    if (nrow(liste_province_colonise) != 0){
+      choixprovincesanstroupecolonise <- sample(nrow(liste_province_colonisateur), 1)
+      Province <- liste_province_colonise[choixprovincesanstroupecolonise, 1]
+      num_province <- which(Province == colnames(Tableau_principal_10_province))
+      print(paste("Colonisé choisit province",Province))
+      num_action_colonise <- sample(5, 1)
+      action_colonise <- Liste_action_colonise[num_action_colonise]
+      print(paste("Colonisé choisit action",action_colonise))
+    }}
   
   #4.2.4 le colonisateur verifie si il a des troupes sinon il a perdu
   if ((i %% 2 != 0) & (Tableau_nombredetroupes$Nbr_troupes_Colonise <= 0)){
@@ -444,8 +475,18 @@ for (i in seq(2, derniernumero)) {
     print(paste("l'armée colonisé a gagné", Province, "avec la méthode", action_colonise, "sans combat"))
   }
   
-  #write.csv2(Tableau_types_actions,file = paste0("C:/Users/u99amo/Downloads/enregistrement_tableau-types-actions",i,".csv"))
-  write.csv2(Tableau_types_actions,file = paste0("/Users/holly/Downloads/log/enregistrement_tableau-types-actions",i,".csv"))
+  
+  if(Exportdetail== TRUE ){
+    if(ordinateur==1 ){
+      write.csv2(Tableau_types_actions,file = paste0("C:/Users/u99amo/Downloads/enregistrement_tableau-types-actions",i,".csv"))
+    }
+    if(ordinateur==2 ){
+      write.csv2(Tableau_types_actions,file = paste0("/Users/holly/Downloads/log/enregistrement_tableau-types-actions",i,".csv"))
+    }
+    
+  }
+  
+  #
   
 }
 
@@ -454,14 +495,22 @@ for (i in seq(2, derniernumero)) {
 #Sauvegarde des données
 
 #5. Sauvegarde du jeu ----
-
+Tableau_principal_10_province_tous<-Tableau_principal_10_province_tous%>%select(-X.1,-X)
 Tableau_principal_10_province_tous<-rbind(Tableau_principal_10_province_tous,Tableau_principal_10_province)
 Tableau_principal_10_province_tous<-Tableau_principal_10_province_tous%>%distinct(.keep_all = fichier)
 
 
 
-write.csv2(Tableau_principal_10_province_tous,file = "/Users/holly/Downloads/enregistrement_AI.csv")
-#write.csv2(Tableau_principal_10_province_tous,file = "C:/Users/u99amo/Downloads/enregistrement_AI.csv")
+  if(ordinateur==1 ){
+    write.csv2(Tableau_principal_10_province_tous,file = "C:/Users/u99amo/Downloads/enregistrement_AI.csv")
+  }
+  if(ordinateur==2 ){
+    write.csv2(Tableau_principal_10_province_tous,file = "/Users/holly/Downloads/enregistrement_AI.csv")
+  }
+    
+
+#
+
 
 #5. Carte de chaleur de la partie
 
@@ -518,7 +567,18 @@ ggplot(df_long, aes(x = Var2, y = Var1, fill = value)) +
   geom_vline(xintercept = x_breaks, color = "black", size = 0.5)
 
 
+nomfichierunique<-Tableau_principal_10_province$fichier[1]
+nomfichierunique<-str_replace_all(nomfichierunique,":","")
+nomfichierunique<-str_replace_all(nomfichierunique,"-","")
+nomfichierunique<-str_replace_all(nomfichierunique," ","")
 
+if(ordinateur ==1){ggsave(plot = last_plot(),paste0("C:/Users/u99amo/Downloads/map",nomfichierunique,".png"))}
+if(ordinateur ==2){ggsave(plot = last_plot(),paste0("/Users/holly/Downloads/map",nomfichierunique,".png"))}
+
+
+
+
+Tableau_principal_10_province$fichier[1]
 #5. Commentaires ----
 #stavaza actuellement le jeu ne peut pas se terminer car la seule condition c'est d'avoir des troupes partout, il faut donc en rajouter ou rajouter une condition pour dire que toute les troupes sont détruirtes    
 # bug quand deux armees sur la meme province  
