@@ -175,6 +175,22 @@ Liste_action_colonisateur <-colnames(Resolution_bataille)[2:6]
 Liste_action_colonise <-Resolution_bataille$X
 
 
+#Importation des données geographiques
+province_geographie <- data.frame(
+  Province = 1:10,
+  Province_voisin_1 = c(2, 1, 2, 3, 4, 5, 2, 1, 8, 9),
+  Province_voisin_2 = c(8, 8, 4, 2, 10, 10, 4, 2, 7, 7),
+  Province_voisin_3 = c(NA, 7, NA, 7, 6, NA, 10, 7, 10, 4),
+  Province_voisin_4 = c(NA, 4, NA, 10, NA, NA, 9, 9, NA, 5),
+  Province_voisin_5 = c(NA, 3, NA, 5, NA, NA, 8, NA, NA, 6),
+  Acces_mer = c(TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, TRUE),
+  Voisin_pays_GRAND = c(TRUE, FALSE, TRUE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE),
+  Voisin_pays_petit = c(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE)
+)
+
+# Print the data frame
+print(province_data)
+
 #3. Lancement du jeu -----
 # 9 province pour joueur colonisateur et 1 province pour joueur colonisé
 num_provinceducoloniseaudebut<-sample(10,1)
@@ -501,13 +517,13 @@ Tableau_principal_10_province_tous<-Tableau_principal_10_province_tous%>%distinc
 
 
 
-  if(ordinateur==1 ){
-    write.csv2(Tableau_principal_10_province_tous,file = "C:/Users/u99amo/Downloads/enregistrement_AI.csv")
-  }
-  if(ordinateur==2 ){
-    write.csv2(Tableau_principal_10_province_tous,file = "/Users/holly/Downloads/enregistrement_AI.csv")
-  }
-    
+if(ordinateur==1 ){
+  write.csv2(Tableau_principal_10_province_tous,file = "C:/Users/u99amo/Downloads/enregistrement_AI.csv")
+}
+if(ordinateur==2 ){
+  write.csv2(Tableau_principal_10_province_tous,file = "/Users/holly/Downloads/enregistrement_AI.csv")
+}
+
 
 #
 
