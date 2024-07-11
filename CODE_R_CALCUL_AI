@@ -4,54 +4,19 @@
 #Date 10 07 2024
 # bug principal : des actions de colonisateurs apparaissent dans le tableau types actions 
 
-# PARTIE A NE FAIRE TOURNER QU'UNE FOIS : INSTALLATION -----
-#Tableau de bord
+#0 Tableau de bord
+ordinateur<- 1
+# pc <- 1
+# mac <-2
 
+#0 Récupération sauvegarde
+Sauvegarde<-2
+#sauvegarde existe déja en local <- 1
+#sauvegarde n'existe pas en local <-2
 
-print("Installation")
-liste<-1:100
-for(i in liste ){
-  ordinateur <- as.integer(readline(prompt = "Entrez le numéro de votre choix 1 (PC) ou 2 (MAC) : "))
-  if(!ordinateur %in% c(1,2)){
-    print("Mauvaise réponse")
-  } else(break )
-}
-
-print("Sauvegarde")
-liste<-1:100
-for(i in liste ){
-  Sauvegarde <- as.integer(readline(prompt = "Entrez le numéro de votre choix 1 (Sauvegarde existe) ou 2 (n'existe pas) : "))
-  if(!ordinateur %in% c(1,2)){
-    print("Mauvaise réponse")
-  } else(break )
-}
-
-print("détail")
-liste<-1:100
-for(i in liste ){
-  Exportdetail <- as.integer(readline(prompt = "Entrez le numéro de votre choix 1 (Exportez détail chaque partie) ou 2 (ne voulez pas) : "))
-  if(!ordinateur %in% c(1,2)){
-    print("Mauvaise réponse")
-  } else(break )
-}
-
-if (Exportdetail == 1) {
-  Exportdetail <- TRUE
-} else {
-  Exportdetail <- FALSE
-}
-
-
-print("Type de partie")
-liste<-1:100
-for(i in liste ){
-  typepartie <- as.integer(readline(prompt = "Entrez le numéro de votre choix 1 (ordicontreordi) ou 2 (humaincoloon) ou 3 (humaincolonisé: "))
-  if(!ordinateur %in% c(1,2,3)){
-    print("Mauvaise réponse")
-  } else(break )
-}
-
-
+Exportdetail<-FALSE
+#si on veut le détail de chaque opération <- TRUE
+#sinon FALSE
 
 #1. #installation et modules ----
 
@@ -86,7 +51,13 @@ library(tidyr)
 library(transformr)
 #install.packages("xlsx")  
 library(xlsx)
+# Installer les packages s'ils ne sont pas déjà installés
+# install.packages("ggplot2")
+# install.packages("patchwork")
 
+# Charger les packages
+library(ggplot2)
+library(patchwork)
 
 #les regles du jeu
 #chaque joueur a des armées et les place sur différentes provinces
@@ -223,8 +194,7 @@ province_geographie <- data.frame(
   Voisin_pays_petit = c(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE)
 )
 
-# Print the data frame
-print(province_data)
+
 
 #3. Lancement du jeu -----
 # 9 province pour joueur colonisateur et 1 province pour joueur colonisé
@@ -264,11 +234,16 @@ if(Sauvegarde==1 & ordinateur==2 ){
 #4. La réalisation des X parties  -----
 #Boucle qui joue toute les batailles
 # c'est le colonisateur qui commence puisque le colonisé a deja un troupe sur le terrain
+nomfichierunique<-Tableau_principal_10_province$fichier[1]
+nomfichierunique<-str_replace_all(nomfichierunique,":","")
+nomfichierunique<-str_replace_all(nomfichierunique,"-","")
+nomfichierunique<-str_replace_all(nomfichierunique," ","")
+
 
 derniernumero<-200
 for (i in seq(2, derniernumero)) {
   
-  #i<-2
+  #i<-3
   #4.1 tour du joueur colonialiste----
   #4.1.1 On regarde les provinces où il ''y a pas encore de soldat à nous 
   if (i %% 2 == 0) {
@@ -279,6 +254,29 @@ for (i in seq(2, derniernumero)) {
     print(paste("joueur colonialiste joue partie",i))
   }
   
+  plot1_colonisateur<- Tableau_nombredetroupes %>%
+    pivot_longer(cols = everything(), names_to = "Groupe", values_to = "Nombre_de_troupes")%>%
+    ggplot( aes(x = Groupe, y = Nombre_de_troupes, fill = Groupe)) +
+    geom_bar(stat = "identity") +
+    scale_fill_manual(values = c("Nbr_troupes_colonisateurs" = "blue", "Nbr_troupes_Colonise" = "red")) +
+    labs(title = "Nombre de troupes par groupe", x = "Groupe", y = "Nombre de troupes") +
+    theme_minimal()+
+    ggtitle(paste("partie ", i, "debut colonisateur nombre de troupe"))
+  
+  plot2_colonisateur<-Tableau_troupe_non_deploye%>% 
+    pivot_longer(cols = everything(), names_to = "Groupe", values_to = "Nombre_de_troupes_non_deployé")%>%
+    ggplot( aes(x = Groupe, y = Nombre_de_troupes_non_deployé, fill = Groupe)) +
+    geom_bar(stat = "identity") +
+    scale_fill_manual(values = c("Nbr_troupes_colonisateurs" = "blue", "Nbr_troupes_Colonise" = "red")) +
+    labs(title = "Nombre de troupes par groupe non déployé", x = "Groupe", y = "Nombre_de_troupes_non_deployé") +
+    theme_minimal()+
+    ggtitle(paste("partie ", i, "debut colonisateur troupes non déployés"))+
+    theme(
+      panel.background = element_rect(fill = "#D2B48C", color = NA),  # Arrière-plan brun clair
+      plot.background = element_rect(fill = "#D2B48C", color = NA),   # Arrière-plan du graphique brun clair
+      panel.grid.major = element_blank(),    # Supprimer la grille majeure pour une meilleure lisibilité
+      panel.grid.minor = element_blank()     # Supprimer la grille mineure pour une meilleure lisibilité
+    )
   
   #4.1.2 Si il n'y a pas de provinces sans troupes à nous, alors la partie est gagné pour le colonisateur
   if ((i %% 2 == 0) & (nrow(liste_province_colonisateur) == 0)) {
@@ -388,6 +386,9 @@ for (i in seq(2, derniernumero)) {
       Tableau_Positions_troupes$Troupes_colonisateur[Tableau_Positions_troupes$Troupes_colonisateur == Province] <- ""
       print(paste("l'armée colonisateur a perdu la bataille dans ", Province, "avec la méthode", action_colonisateur, "l'armée est en déroute"))
     }
+    
+    
+    
   }
   
   if ((i %% 2 == 0) & (Tableau_types_actions[1, num_province] == "vide")) {
@@ -396,9 +397,40 @@ for (i in seq(2, derniernumero)) {
     Tableau_types_actions[1, num_province] <- action_colonisateur
     print(paste("l'armée colonisateur a gagné", Province, "avec la méthode", action_colonisateur, "sans combat"))
   }
+
+  df <- data.frame(
+    Prov1_SuryaLoka = Tableau_principal_10_province[,1] ,
+    Prov2_BulanRaya = Tableau_principal_10_province[,2],
+    Prov3_AngkasaIndah = Tableau_principal_10_province[,3],
+    Prov4_BintangTerang = Tableau_principal_10_province[,4],
+    Prov5_SamudraBiru = Tableau_principal_10_province[,5],
+    Prov6_Sangkhala = Tableau_principal_10_province[,6],
+    Prov7_PulauCahaya = Tableau_principal_10_province[,7],
+    Prov8_GunungLangit = Tableau_principal_10_province[,8],
+    Prov9_TanahSuci = Tableau_principal_10_province[,9],
+    Prov10_MegaSutra =Tableau_principal_10_province[,10]
+  )
+  # Convertir les valeurs "Colonisateur" en 0 et "Colonisé" en 1
+  df_numeric <- apply(df, 2, function(x) ifelse(x == "Colonisateur", 0, 1))
+  df_long <- melt(df_numeric)
+  x_breaks <- seq(1.5, ncol(df) + 0.5, 1)
+  temp<-Tableau_Positions_troupes%>%mutate(reconciliation = paste0(Troupes_colonisateur,i))%>%mutate(point = 1)
+  df_long<-df_long%>%mutate(reconciliation = paste0(Var2,Var1))%>%mutate(point =temp$point[match(reconciliation, temp$reconciliation)] )
   
-  
-  
+  # Créer la heatmap
+  plot3_colonisateur<- ggplot(df_long, aes(x = Var2, y = Var1, fill = value)) +
+    geom_tile() +
+    scale_fill_gradient(low = "#271D8D", high = "#CA1510") +
+    labs(x = "Colonnes", y = "Lignes", fill = "Valeur") +
+    scale_y_reverse() +
+    theme_minimal()+
+    geom_vline(xintercept = x_breaks, color = "black", size = 0.5)+
+    geom_point(data = subset(df_long, point == 1), aes(x = Var2, y = Var1), color = "white", size = 3) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Pour une meilleure lisibilité des étiquettes x
+  plottotal<-plot1_colonisateur+plot2_colonisateur+plot3_colonisateur
+ 
+  if(ordinateur ==1){ggsave(plot = plottotal,paste0("C:/Users/u99amo/Downloads/map",nomfichierunique,"_",i,".png"), width = 10, height = 4)}
+  if(ordinateur ==2){ggsave(plot = last_plot(),paste0("/Users/holly/Downloads/map" ,nomfichierunique,"_",i,".png"), width = 10, height = 4)}
   
   #4.2 tour du joueur colonisé  ----
   #4.2.1 On regarde les provinces où il ''y a pas encore de soldat à nous 
@@ -409,6 +441,31 @@ for (i in seq(2, derniernumero)) {
     liste_province_colonise <- liste_province_colonise %>% filter(dejatroupe == TRUE)
     print(paste("joueur colonisé joue partie",i))
     
+    
+    
+    plot1_colonise<- Tableau_nombredetroupes %>%
+      pivot_longer(cols = everything(), names_to = "Groupe", values_to = "Nombre_de_troupes")%>%
+      ggplot( aes(x = Groupe, y = Nombre_de_troupes, fill = Groupe)) +
+      geom_bar(stat = "identity") +
+      scale_fill_manual(values = c("Nbr_troupes_colonisateurs" = "blue", "Nbr_troupes_Colonise" = "red")) +
+      labs(title = "Nombre de troupes par groupe", x = "Groupe", y = "Nombre de troupes") +
+      theme_minimal()+
+      ggtitle(paste("partie ", i, "debut colonisé nombre de troupe"))
+    
+    plot2_colonise<-Tableau_troupe_non_deploye%>% 
+      pivot_longer(cols = everything(), names_to = "Groupe", values_to = "Nombre_de_troupes_non_deployé")%>%
+      ggplot( aes(x = Groupe, y = Nombre_de_troupes_non_deployé, fill = Groupe)) +
+      geom_bar(stat = "identity") +
+      scale_fill_manual(values = c("Nbr_troupes_colonisateurs" = "blue", "Nbr_troupes_Colonise" = "red")) +
+      labs(title = "Nombre de troupes par groupe non déployé", x = "Groupe", y = "Nombre_de_troupes_non_deployé") +
+      theme_minimal()+
+      ggtitle(paste("partie ", i, "debut colonisateur troupes non déployés"))+
+      theme(
+        panel.background = element_rect(fill = "#D2B48C", color = NA),  # Arrière-plan brun clair
+        plot.background = element_rect(fill = "#D2B48C", color = NA),   # Arrière-plan du graphique brun clair
+        panel.grid.major = element_blank(),    # Supprimer la grille majeure pour une meilleure lisibilité
+        panel.grid.minor = element_blank()     # Supprimer la grille mineure pour une meilleure lisibilité
+      )
   }
   #4.2.2 Si il n'y a pas de provinces sans troupes à nous, alors la partie est gagné pour le colonisateur
   if (i %% 2 != 0)  {
@@ -527,19 +584,48 @@ for (i in seq(2, derniernumero)) {
   }
   
   
-  if(Exportdetail== TRUE ){
-    if(ordinateur==1 ){
-      write.csv2(Tableau_types_actions,file = paste0("C:/Users/u99amo/Downloads/enregistrement_tableau-types-actions",i,".csv"))
-    }
-    if(ordinateur==2 ){
-      write.csv2(Tableau_types_actions,file = paste0("/Users/holly/Downloads/log/enregistrement_tableau-types-actions",i,".csv"))
-    }
+
+    df <- data.frame(
+      Prov1_SuryaLoka = Tableau_principal_10_province[,1] ,
+      Prov2_BulanRaya = Tableau_principal_10_province[,2],
+      Prov3_AngkasaIndah = Tableau_principal_10_province[,3],
+      Prov4_BintangTerang = Tableau_principal_10_province[,4],
+      Prov5_SamudraBiru = Tableau_principal_10_province[,5],
+      Prov6_Sangkhala = Tableau_principal_10_province[,6],
+      Prov7_PulauCahaya = Tableau_principal_10_province[,7],
+      Prov8_GunungLangit = Tableau_principal_10_province[,8],
+      Prov9_TanahSuci = Tableau_principal_10_province[,9],
+      Prov10_MegaSutra =Tableau_principal_10_province[,10]
+    )
+    df_numeric <- apply(df, 2, function(x) ifelse(x == "Colonisateur", 0, 1))
+    df_long <- melt(df_numeric)
+    x_breaks <- seq(1.5, ncol(df) + 0.5, 1)
+    temp<-Tableau_Positions_troupes%>%mutate(reconciliation = paste0(Troupes_colonisateur,i))%>%mutate(point = 1)
+    df_long<-df_long%>%mutate(reconciliation = paste0(Var2,Var1))%>%mutate(point =temp$point[match(reconciliation, temp$reconciliation)] )
+    
+    plot3_colonise<- ggplot(df_long, aes(x = Var2, y = Var1, fill = value)) +
+      geom_tile() +
+      scale_fill_gradient(low = "#271D8D", high = "#CA1510") +
+      labs(x = "Colonnes", y = "Lignes", fill = "Valeur") +
+      scale_y_reverse() +
+      theme_minimal()+
+      geom_vline(xintercept = x_breaks, color = "black", size = 0.5)+
+      geom_point(data = subset(df_long, point == 1), aes(x = Var2, y = Var1), color = "white", size = 3) +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Pour une meilleure lisibilité des étiquettes x
+    plottotal<-plot1_colonisateur+plot2_colonisateur+plot3_colonisateur
+    
+    if(ordinateur ==1){ggsave(plot = plottotal,paste0("C:/Users/u99amo/Downloads/map",nomfichierunique,"_",i,".png"), width = 10, height = 4)}
+    if(ordinateur ==2){ggsave(plot = last_plot(),paste0("/Users/holly/Downloads/map" ,nomfichierunique,"_",i,".png"), width = 10, height = 4)}
+    
+    
     
   }
   
   #
   
-}
+  
+  
+
 
 #stavaza actuellement le jeu ne peut pas se terminer car la seule condition c'est d'avoir des troupes partout, il faut donc en rajouter ou rajouter une condition pour dire que toute les troupes sont détruirtes    
 # bug quand deux armees sur la meme province
@@ -615,13 +701,12 @@ ggplot(df_long, aes(x = Var2, y = Var1, fill = value)) +
   labs(x = "Colonnes", y = "Lignes", fill = "Valeur") +
   scale_y_reverse() +
   theme_minimal()+
-  geom_vline(xintercept = x_breaks, color = "black", size = 0.5)
+  geom_vline(xintercept = x_breaks, color = "black", size = 0.5)+
+  geom_point(data = subset(df_long, point == 1), aes(x = Var2, y = Var1), color = "white", size = 3) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Pour une meilleure lisibilité des étiquettes x
 
 
-nomfichierunique<-Tableau_principal_10_province$fichier[1]
-nomfichierunique<-str_replace_all(nomfichierunique,":","")
-nomfichierunique<-str_replace_all(nomfichierunique,"-","")
-nomfichierunique<-str_replace_all(nomfichierunique," ","")
+
 
 if(ordinateur ==1){ggsave(plot = last_plot(),paste0("C:/Users/u99amo/Downloads/map",nomfichierunique,".png"))}
 if(ordinateur ==2){ggsave(plot = last_plot(),paste0("/Users/holly/Downloads/map",nomfichierunique,".png"))}
