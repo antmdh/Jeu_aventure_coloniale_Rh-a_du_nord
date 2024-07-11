@@ -4,19 +4,54 @@
 #Date 10 07 2024
 # bug principal : des actions de colonisateurs apparaissent dans le tableau types actions 
 
-#0 Tableau de bord
-ordinateur<- 1
-# pc <- 1
-# mac <-2
+# PARTIE A NE FAIRE TOURNER QU'UNE FOIS : INSTALLATION -----
+#Tableau de bord
 
-#0 Récupération sauvegarde
-Sauvegarde<-0
-#sauvegarde existe déja en local <- 1
-#sauvegarde n'existe pas en local <-2
 
-Exportdetail<-FALSE
-#si on veut le détail de chaque opération <- TRUE
-#sinon FALSE
+print("Installation")
+liste<-1:100
+for(i in liste ){
+  ordinateur <- as.integer(readline(prompt = "Entrez le numéro de votre choix 1 (PC) ou 2 (MAC) : "))
+  if(!ordinateur %in% c(1,2)){
+    print("Mauvaise réponse")
+  } else(break )
+}
+
+print("Sauvegarde")
+liste<-1:100
+for(i in liste ){
+  Sauvegarde <- as.integer(readline(prompt = "Entrez le numéro de votre choix 1 (Sauvegarde existe) ou 2 (n'existe pas) : "))
+  if(!ordinateur %in% c(1,2)){
+    print("Mauvaise réponse")
+  } else(break )
+}
+
+print("détail")
+liste<-1:100
+for(i in liste ){
+  Exportdetail <- as.integer(readline(prompt = "Entrez le numéro de votre choix 1 (Exportez détail chaque partie) ou 2 (ne voulez pas) : "))
+  if(!ordinateur %in% c(1,2)){
+    print("Mauvaise réponse")
+  } else(break )
+}
+
+if (Exportdetail == 1) {
+  Exportdetail <- TRUE
+} else {
+  Exportdetail <- FALSE
+}
+
+
+print("Type de partie")
+liste<-1:100
+for(i in liste ){
+  typepartie <- as.integer(readline(prompt = "Entrez le numéro de votre choix 1 (ordicontreordi) ou 2 (humaincoloon) ou 3 (humaincolonisé: "))
+  if(!ordinateur %in% c(1,2,3)){
+    print("Mauvaise réponse")
+  } else(break )
+}
+
+
 
 #1. #installation et modules ----
 
